@@ -1,4 +1,4 @@
-//! Criterion batch-throughput benchmark for the algorithms family (AC-7 / 7.1).
+//! Criterion batch-throughput benchmark for the algorithms family.
 //!
 //! Gated workload: **PELT change-point detection** on a long piecewise-constant
 //! signal. The Python baseline is `ruptures.Pelt(model="l2")`, a pure-Python

@@ -1,4 +1,4 @@
-//! Consolidated equivalence-suite entry point (AC-1 through AC-5).
+//! Consolidated equivalence-suite entry point for all numeric families.
 //!
 //! A single integration-test binary that pulls in every family's equivalence
 //! suite as a submodule, so the protected `tests/` root stays within the

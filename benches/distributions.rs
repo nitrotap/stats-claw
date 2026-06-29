@@ -1,4 +1,4 @@
-//! Criterion batch-throughput benchmarks for the distribution family (AC-7 / 7.1).
+//! Criterion batch-throughput benchmarks for the distribution family.
 //!
 //! Benchmarks the batch hot paths `pdf` / `cdf` / `sample` over a large input
 //! vector for the Normal family, plus a single `gradient_descent` step as a

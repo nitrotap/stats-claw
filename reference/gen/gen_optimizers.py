@@ -1,4 +1,4 @@
-"""Golden fixtures for the optimizer family (Track B / AC-3).
+"""Golden fixtures for the optimizer family.
 
 Run via ``make fixtures`` or ``python3 -m gen.gen_optimizers`` from
 ``stats-claw/reference``. Python (scipy) runs ONLY here at generation time;
@@ -14,7 +14,7 @@ Two kinds of fixture are written:
   the stats-claw optimizers with a faithful counterpart can be cross-checked.
 
 The stats-claw <-> scipy mapping is recorded here and mirrored in the Rust
-``optimizers/mod.rs`` doc-comment (AC-3 story 3.3 auditability).
+``optimizers/mod.rs`` doc-comment.
 """
 import numpy as np
 import scipy

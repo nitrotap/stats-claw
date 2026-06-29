@@ -1,13 +1,12 @@
-//! Phase 3 performance gate (AC-7 stories 7.1, 7.2, 7.3).
+//! Performance gate: reads the committed results under `benches/results/` and
+//! fails if any recorded factor or latency misses its documented target, or if
+//! streaming state is not bounded. The gate is offline and hermetic — it checks
+//! recorded measurements, never re-runs a benchmark — so it behaves like the
+//! golden-fixture suites.
 //!
-//! Reads the committed results under `benches/results/` and fails if any recorded
-//! factor or latency misses its documented target, or if streaming state is not
-//! bounded. The gate is offline and hermetic — it checks recorded measurements,
-//! never re-runs a benchmark — so it behaves like the golden-fixture suites.
-//!
-//! Coverage is **per family** (AC-7 / roadmap §W3): the gate discovers every
-//! `benches/results/*.json` record and enforces the unified [`gate::TARGET_FACTOR`]
-//! (2.0×) against each, so a new family record automatically joins the gate.
+//! Coverage is **per family**: the gate discovers every `benches/results/*.json`
+//! record and enforces the unified [`gate::TARGET_FACTOR`] (2.0×) against each,
+//! so a new family record automatically joins the gate.
 //!
 //! The gate-checker logic lives in [`gate`] and is fed both the real recorded
 //! results and synthetic rows, so the failure paths (below-target factor,
@@ -117,8 +116,8 @@ fn synthetic_below_target_factor_fails_the_gate() {
 
 #[test]
 fn factor_just_below_two_x_fails_the_gate() {
-    // A record measured at 1.6x — comfortably above the retired 1.5x bar — must
-    // now FAIL the unified 2.0x target. This pins the resolved D2 decision.
+    // A record measured at 1.6x — comfortably above the old 1.5x bar — must
+    // FAIL the unified 2.0x target. This pins the target at the 2.0x value.
     let record = PerfRecord::synthetic_with_factor(1.6);
     let result = gate::check_factor(&record);
     assert!(

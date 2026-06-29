@@ -1,9 +1,9 @@
 //! Equivalence and reproducibility suite for the resampling module.
 //!
 //! Reproducibility tests assert that seeded draws are byte-identical across runs
-//! and seed-sensitive (AC-5 Story 5.1). The interval test asserts our percentile
-//! CI of a seeded median bootstrap matches the committed `scipy.stats.bootstrap`
-//! reference within Monte-Carlo relative error (AC-5 Story 5.2, QA-DIST-084).
+//! and seed-sensitive. The interval test asserts our percentile CI of a seeded
+//! median bootstrap matches the committed `scipy.stats.bootstrap` reference within
+//! Monte-Carlo relative error.
 
 use crate::common;
 
@@ -143,10 +143,9 @@ fn median_bootstrap_ci_matches_scipy() -> Result<(), Box<dyn std::error::Error>>
     let stats = bootstrap_statistic(&data, 20_000, &mut SplitMix64::new(12345), median)?;
     let (lo, hi) = percentile_ci(&stats, alpha)?;
 
-    // Within Monte-Carlo relative error of the scipy reference (rel <= 1e-2 per
-    // the build plan / QA-DIST-084 within-MC convention). Our RNG stream differs
-    // from scipy's, so only the bootstrap distribution converges, not the bounds
-    // exactly; the tolerance absorbs the residual MC gap at large B.
+    // Within Monte-Carlo relative error of the scipy reference (rel <= 1e-2). Our
+    // RNG stream differs from scipy's, so only the bootstrap distribution converges,
+    // not the bounds exactly; the tolerance absorbs the residual MC gap at large B.
     common::assert_close(lo, ref_low, 0.0, 1e-2);
     common::assert_close(hi, ref_high, 0.0, 1e-2);
     Ok(())

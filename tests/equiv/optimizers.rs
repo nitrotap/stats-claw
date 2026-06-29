@@ -1,11 +1,11 @@
-//! Equivalence and behaviour suite for the optimizer family (AC-3).
+//! Equivalence and behaviour suite for the optimizer family.
 //!
 //! Every optimizer is asserted to (3.1) converge to a known optimum within the
-//! `test-plan.md` tolerance, (3.2) report status / final value / iteration count,
+//! documented tolerance, (3.2) report status / final value / iteration count,
 //! (3.3) agree with its `scipy.optimize` counterpart where one exists, and (3.4)
 //! reproduce byte-identically under a seed (stochastic ones only).
 //!
-//! ## stats-claw → `scipy.optimize` mapping (AC-3 story 3.3 auditability)
+//! ## stats-claw → `scipy.optimize` mapping
 //!
 //! | stats-claw              | `scipy.optimize`                  | agreement |
 //! |-----------------------|-----------------------------------|-----------|
@@ -38,7 +38,7 @@ use stats_claw::rng::SplitMix64;
 /// Solution absolute tolerance; the minima here are at moderate coordinates so a
 /// generous absolute floor plus the relative band covers them.
 const SOL_ATOL: f64 = 1e-5;
-/// Solution tolerance from `test-plan.md` (optimizer optima solution rel ≤ 1e-6).
+/// Solution relative tolerance (optimizer optima solution rel ≤ 1e-6).
 const SOL_RTOL: f64 = 1e-6;
 /// Objective-value tolerance (objective rel ≤ 1e-8) with a small absolute floor
 /// because the known minimum is exactly 0 (rel tolerance alone cannot pass).
@@ -56,19 +56,19 @@ fn assert_quad_min(r: &OptimizeResult) {
     assert!(r.iterations > 0, "iterations was {}", r.iterations);
 }
 
-/// Asserts the reported `fx` equals the objective re-evaluated at `x` (story 3.2).
+/// Asserts the reported `fx` equals the objective re-evaluated at `x`.
 fn assert_fx_consistent(obj: &impl Objective, r: &OptimizeResult) {
     common::assert_close(r.fx, obj.value(&r.x), 1e-12, 1e-12);
 }
 
 /// Asserts two `f64` values are bit-identical — the right notion of equality for
-/// seeded-reproducibility checks (story 3.4), and one that sidesteps the
-/// `float_cmp` lint that fires on `==` for floats.
+/// seeded-reproducibility checks, and one that sidesteps the `float_cmp` lint
+/// that fires on `==` for floats.
 fn assert_bits_eq(a: f64, b: f64) {
     assert_eq!(a.to_bits(), b.to_bits(), "values differ: {a} vs {b}");
 }
 
-// --- Story 3.1 / 3.2: convergence + reporting on the quadratic ---------------
+// --- Convergence + reporting on the quadratic --------------------------------
 
 #[test]
 fn gradient_descent_finds_quadratic_minimum() -> Result<(), HarnessError> {
@@ -176,7 +176,7 @@ fn genetic_finds_quadratic_minimum() {
     assert!(r.iterations > 0);
 }
 
-// --- Story 3.1: Rosenbrock for the methods to which it applies ---------------
+// --- Rosenbrock for the methods to which it applies --------------------------
 //
 // Rosenbrock starts at [-1.2, 1.0]. Applicable to the gradient-based and quasi-
 // Newton methods and the derivative-free methods. The plain learning-rate
@@ -237,7 +237,7 @@ fn genetic_finds_rosenbrock_minimum() {
     );
 }
 
-// --- Story 3.2: budget-limited runs report MaxIterReached --------------------
+// --- Budget-limited runs report MaxIterReached --------------------------------
 
 #[test]
 fn under_budgeted_runs_report_max_iter() {
@@ -259,13 +259,13 @@ fn under_budgeted_runs_report_max_iter() {
     assert_eq!(lb.iterations, 1);
 }
 
-// --- Story 3.3: agreement with scipy.optimize on the shared problem ----------
+// --- Agreement with scipy.optimize on the shared problem ----------------------
 //
 // Compared optimizers map to: conjugate_gradient → CG, newton → Newton-CG,
 // lbfgs → L-BFGS-B, simulated_annealing → dual_annealing, genetic →
 // differential_evolution. The first-order learning-rate methods
 // (gradient_descent, sgd, adam, rmsprop, adagrad) have no faithful scipy.optimize
-// counterpart and are excluded from this story (recorded in the module mapping).
+// counterpart and are excluded (recorded in the module mapping).
 
 /// Asserts a stats-claw result agrees with the scipy result stored under `key`.
 fn assert_agrees_scipy(
@@ -329,7 +329,7 @@ fn genetic_agrees_with_scipy_differential_evolution() -> Result<(), HarnessError
     Ok(())
 }
 
-// --- Story 3.4: seeded reproducibility for the stochastic optimizers ---------
+// --- Seeded reproducibility for the stochastic optimizers --------------------
 //
 // Stochastic (seed-variation required): sgd, simulated_annealing, genetic.
 // Deterministic-by-construction (exempt): gradient_descent, adam, rmsprop,
@@ -370,7 +370,7 @@ fn genetic_is_reproducible_under_seed() {
     assert_ne!(a.x, c.x, "different seeds produced identical points");
 }
 
-// --- Coverage guards: mapping / exclusion lists are auditable (3.1, 3.3, 3.4) -
+// --- Coverage guards: mapping / exclusion lists are auditable -----------------
 
 #[test]
 fn scipy_comparison_excludes_first_order_methods() {

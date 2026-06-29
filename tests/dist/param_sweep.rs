@@ -1,17 +1,16 @@
-//! P4 test-coverage hardening: parameter-sweep tests (C4c) for all continuous
-//! distributions.
+//! Parameter-sweep tests for all continuous distributions.
 //!
-//! Addresses the "partial" note in chapter 01 Story 1.1 (pdf/cdf/ppf/moments
-//! tested at a single parameterization per distribution, not a sweep). The
-//! `check_param_sweep` helper in `dist/mod.rs` asserts pdf ≥ 0, cdf ∈ [0,1],
+//! Asserts pdf/cdf/ppf/moments across 3–5 representative parameterizations per
+//! distribution, covering the parameter space beyond a single point.
+//! The `check_param_sweep` helper in `dist/mod.rs` asserts pdf ≥ 0, cdf ∈ [0,1],
 //! cdf monotone, `cdf(quantile(p)) ≈ p`, and defined moments are finite — across
 //! 3–5 representative parameterizations per family.
 //!
 //! Discrete distributions (Binomial, Poisson) implement `Pmf` rather than `Pdf`
 //! so the continuous `check_param_sweep` does not apply to them; discrete
-//! equivalence at multiple parameterizations is covered by the goodness-of-fit checks in
-//! `dist/discrete.rs` which assert `pmf + cdf + ppf` at the single parameterization
-//! that best exercises each family's behaviour.
+//! equivalence at multiple parameterizations is covered by the goodness-of-fit
+//! checks in `dist/discrete.rs` which assert `pmf + cdf + ppf` at the single
+//! parameterization that best exercises each family's behaviour.
 
 use super::check_param_sweep;
 use stats_claw::distributions::{

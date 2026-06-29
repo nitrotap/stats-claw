@@ -1,13 +1,14 @@
-# Published performance results (AC-7 / Phase 3 gate)
+# Published performance results
 
-This directory holds the **committed** performance measurements that the Phase 3
-gate (`tests/perf.rs`) reads. The numbers are recorded once from a real run and
-checked into git, so `cargo test` stays hermetic and offline — exactly like the
-golden-fixture equivalence suites. Re-measuring is a manual, dev-only step.
+This directory holds the **committed** performance measurements that the
+performance gate (`tests/perf.rs`) reads. The numbers are recorded once from a
+real run and checked into git, so `cargo test` stays hermetic and offline —
+exactly like the golden-fixture equivalence suites. Re-measuring is a manual,
+dev-only step.
 
-Coverage is **per family** (AC-7 / roadmap §W3): the gate discovers every
-`*.json` record here and enforces the same unified target against each, so adding
-a family record automatically extends the gate.
+Coverage is **per family**: the gate discovers every `*.json` record here and
+enforces the same unified target against each, so adding a family record
+automatically extends the gate.
 
 ## Files
 
@@ -26,15 +27,14 @@ trend, and the environment metadata:
 
 ## Documented targets
 
-The source docs (`requirements.md` NFR-2/NFR-3, `test-plan.md`) state the
-performance promise only **qualitatively** ("materially faster than the Python
-equivalent", "sub-millisecond" hot path, "bounded memory independent of stream
-length"). This README fixes the qualitative promise into defensible numeric
-targets that the gate enforces, unified across every family:
+The performance promise is stated qualitatively ("materially faster than the
+Python equivalent", "sub-millisecond" hot path, "bounded memory independent of
+stream length"). This README fixes the qualitative promise into defensible
+numeric targets that the gate enforces, unified across every family:
 
 | Metric | Target | Rationale |
 |--------|--------|-----------|
-| Per-family batch throughput factor vs the Python baseline | **≥ 2.0×** | "Materially faster" — a 2× floor is a conservative, honest bar. Resolved to a single 2.0× value (the gate, this README, and chapter 07 previously disagreed at 1.5× vs 2.0×; roadmap decision D2 fixes 2.0×). Enforced by `gate::TARGET_FACTOR`. |
+| Per-family batch throughput factor vs the Python baseline | **≥ 2.0×** | "Materially faster" — a 2× floor is a conservative, honest bar. A single 2.0× value is applied consistently. Enforced by `gate::TARGET_FACTOR`. |
 | Hot-path single-call latency (p99, warm-up excluded) | **< 1.0 ms** | NFR-2 "sub-millisecond"; per-call costs are nanoseconds-to-microseconds, so the per-call budget has wide headroom. |
 | Streaming peak state size growth | **0 bytes** across stream lengths | NFR-3 "bounded memory independent of stream length"; the estimators are fixed-size structs, so `size_of` is constant. Batch-only families record an `out_of_scope` rationale instead. |
 
@@ -64,8 +64,9 @@ faked number.
 >   hand-written `core::arch` `exp` (Cephes range-reduction polynomial),
 >   runtime-dispatched — **NEON** (2× f64) on `aarch64`, **AVX2+FMA** (4× f64) on
 >   `x86_64`, scalar fallback otherwise. Std-only intrinsics (not a dependency);
->   `unsafe_code` relaxed `forbid`→`deny` with per-kernel `// SAFETY:` lines (AC-8.2
->   permits justified `unsafe`). See `src/distributions/simd.rs`.
+>   `unsafe_code` relaxed `forbid`→`deny` with per-kernel `// SAFETY:` lines;
+>   each justified-unsafe block is enforced by `tests/gates.rs`. See
+>   `src/distributions/simd.rs`.
 > - **Authoritative measurement (Linux target):** the gate is measured inside a
 >   **native `linux/arm64` Docker container (NEON)** via `benches/simd-linux/measure.sh`,
 >   not the dev box. Measured: **`pdf` 12.49×** (gated),
@@ -77,8 +78,8 @@ faked number.
 >   (An even earlier revision gated a favorable *per-draw vs stdlib `random.gauss`*
 >   metric; that swap is not used.)
 >
-> **`sample` (3.45×) now clears the bar via a native-SIMD ziggurat (P1 / E1a).**
-> The earlier 0.52× scalar Box–Muller residual (ledger row C1) is closed:
+> **`sample` (3.45×) now clears the bar via a native-SIMD ziggurat.**
+> The earlier 0.52× scalar Box–Muller residual is closed:
 > `NormalDistribution::sample_batch` (`src/distributions/ziggurat.rs`) runs the
 > Marsaglia–Tsang ziggurat, runtime-dispatched NEON/AVX2/scalar with a per-block
 > `// SAFETY:`, and beats numpy's vectorized SIMD ziggurat (`norm.rvs`) 3.45× on the

@@ -1,5 +1,4 @@
-//! Criterion batch-throughput benchmark for the statistical-test family
-//! (AC-7 / 7.1).
+//! Criterion batch-throughput benchmark for the statistical-test family.
 //!
 //! Gated workload: **many independent two-sample t-tests** — run
 //! `t_test_ind` over a batch of independent sample-pairs. This is the realistic

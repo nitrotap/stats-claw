@@ -1,16 +1,16 @@
-//! P4 test-coverage hardening: moment-convergence (C4a) and tail-stress (C4b)
-//! tests for all 14 distributions.
+//! Moment-convergence and tail-stress tests for all 14 distributions.
 //!
-//! Addresses the NOT-IMPLEMENTED/partial notes in chapter 01 (Story 1.4
-//! moment-convergence and Story 1.1 tail-stress guard). Helpers are in
-//! `dist/mod.rs`; parameter-sweep tests (C4c) live in `dist/param_sweep.rs`.
+//! Verifies that empirical moments converge to analytic values on large seeded
+//! draws and that pdf/cdf/pmf stay within valid ranges across far-tail inputs.
+//! Helpers are in `dist/mod.rs`; parameter-sweep tests live in
+//! `dist/param_sweep.rs`.
 //!
-//! **Moment-convergence tolerances (C4a):** `n = 100_000`. Absolute tolerances
-//! are chosen at approximately 8–10× the standard error of the empirical moment
+//! **Moment-convergence tolerances:** `n = 100_000`. Absolute tolerances are
+//! chosen at approximately 8–10× the standard error of the empirical moment
 //! estimator so any correct sampler passes without false-positive failures from
 //! random seed variation.
 //!
-//! **Tail-stress grids (C4b):** grids span far-tail values chosen so a broken
+//! **Tail-stress grids:** grids span far-tail values chosen so a broken
 //! implementation would overflow to NaN/±∞ but a correct one saturates cleanly
 //! to 0 or 1.
 
@@ -22,7 +22,7 @@ use stats_claw::distributions::{
     UniformDistribution, WeibullDistribution,
 };
 
-// ─── C4a — Moment-convergence ────────────────────────────────────────────────
+// ─── Moment-convergence ──────────────────────────────────────────────────────
 
 #[test]
 fn normal_moment_convergence() {
@@ -260,7 +260,7 @@ fn cauchy_moment_convergence_skipped_no_finite_moments() {
     );
 }
 
-// ─── C4b — Tail-stress guard ─────────────────────────────────────────────────
+// ─── Tail-stress guard ───────────────────────────────────────────────────────
 
 /// Grid spanning both far tails of ℝ, including extreme-but-finite values.
 const REAL_LINE_GRID: &[f64] = &[
@@ -415,7 +415,7 @@ fn f_tail_stress() {
     );
 }
 
-// ─── C4b — Discrete PMF tail-stress ─────────────────────────────────────────
+// ─── Discrete PMF tail-stress ────────────────────────────────────────────────
 //
 // Binomial and Poisson implement `Pmf + Cdf`, not `Pdf + Cdf`, so
 // `check_tail_stress` (bounded on `Pdf`) cannot cover them. The parallel

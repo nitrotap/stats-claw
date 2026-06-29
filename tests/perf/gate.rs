@@ -11,12 +11,11 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-/// The unified per-family throughput target (AC-7 / D2): every family's gated
-/// batch metric must beat its Python baseline by at least this factor.
+/// The unified per-family throughput target: every family's gated batch metric
+/// must beat its Python baseline by at least this factor.
 ///
-/// Resolved to **2.0×** per roadmap decision D2 (was inconsistently 1.5× in the
-/// gate vs 2.0× in the results README); the gate, the README, and chapter 07 now
-/// all use this single value.
+/// Set to **2.0×**, applied consistently across every family record — the gate,
+/// the results README, and the throughput benchmarks all use this value.
 pub const TARGET_FACTOR: f64 = 2.0;
 
 /// One family's recorded performance results (the shape of a `results/*.json`).
@@ -77,8 +76,8 @@ pub struct EstimatorRecord {
     pub scope: String,
 }
 
-/// Fails if the gated batch factor is below the unified [`TARGET_FACTOR`],
-/// naming the family, dataset, and the shortfall (AC-7 Story 7.1).
+/// Fails if the gated batch factor is below [`TARGET_FACTOR`], naming the
+/// family, dataset, and the shortfall.
 ///
 /// The bar is the single workspace-wide [`TARGET_FACTOR`] (2.0×), not the
 /// per-record `target_factor` field: a record cannot ship a weaker self-declared
@@ -107,8 +106,8 @@ pub fn check_factor(record: &PerfRecord) -> Result<(), String> {
     Ok(())
 }
 
-/// Fails if any required published field is missing or non-positive, so the
-/// recorded results are complete and auditable (AC-7 Story 7.1).
+/// Fails if any required published field is missing or non-positive, ensuring
+/// the recorded results are complete and auditable.
 pub fn check_published_completeness(record: &PerfRecord) -> Result<(), String> {
     if record.dataset.is_empty() {
         return Err("published results missing dataset".to_owned());
@@ -126,7 +125,7 @@ pub fn check_published_completeness(record: &PerfRecord) -> Result<(), String> {
 }
 
 /// Fails if the hot-path latency exceeds its sub-millisecond target, naming the
-/// measured value and the target (AC-7 Story 7.3).
+/// measured value and the target.
 pub fn check_latency(record: &PerfRecord) -> Result<(), String> {
     if record.latency.p99_ms > record.latency.target_ms + 1e-12 {
         return Err(format!(
@@ -138,7 +137,7 @@ pub fn check_latency(record: &PerfRecord) -> Result<(), String> {
 }
 
 /// Fails if any in-scope streaming estimator's state grows beyond the documented
-/// bound, reporting the growth trend (AC-7 Story 7.2).
+/// bound, reporting the growth trend.
 pub fn check_streaming_bounded(record: &PerfRecord) -> Result<(), String> {
     for (name, est) in &record.streaming.estimators {
         if est.growth_bytes > record.streaming.bound_bytes_growth_target {
@@ -151,9 +150,9 @@ pub fn check_streaming_bounded(record: &PerfRecord) -> Result<(), String> {
     Ok(())
 }
 
-/// Fails unless streaming coverage is auditable (AC-7 Story 7.2): either the
-/// family records at least one in-scope estimator, or — for a batch-only family
-/// with no online formulation — it explicitly records why under `out_of_scope`.
+/// Fails unless streaming coverage is auditable: either the family records at
+/// least one in-scope estimator, or — for a batch-only family with no online
+/// formulation — it explicitly records why under `out_of_scope`.
 ///
 /// # Errors
 ///

@@ -1,7 +1,7 @@
 """Golden fixtures for the resampling family.
 
 Produces a seed-fixed median-bootstrap percentile confidence interval from
-``scipy.stats.bootstrap`` (the trusted reference for AC-5 Story 5.2 / QA-DIST-084).
+``scipy.stats.bootstrap`` (the trusted reference for the resampling CI test).
 The Rust suite recomputes a percentile CI of the bootstrap median over its own
 seeded resamples and asserts the bounds fall within Monte-Carlo relative error of
 the stored 2.5 / 97.5 reference.

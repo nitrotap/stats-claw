@@ -1,4 +1,4 @@
-//! Log-space / extreme-p-value equivalence (AC-2 Story 2.2, P5).
+//! Log-space / extreme-p-value equivalence tests.
 //!
 //! Asserts the distribution `logsf`/`logcdf` and the test-level `log_p_value`
 //! match `scipy.stats` at extreme inputs where the linear path underflows to
@@ -51,7 +51,7 @@ fn check_dist(dist: &impl LogCdf, block: &serde_json::Value, name: &str) -> Resu
 }
 
 /// Reads a small integer degrees-of-freedom field (stored as a JSON integer) as
-/// the `i64` the generated distribution structs carry — no `f64 → int` cast.
+/// the `i64` the distribution structs carry — no `f64 → int` cast.
 fn df_of(obj: &serde_json::Value, key: &'static str) -> Result<i64, TestError> {
     obj.get(key)
         .and_then(serde_json::Value::as_i64)

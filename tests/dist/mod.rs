@@ -5,12 +5,12 @@
 //! under the 200-line cap. Helpers borrow the parent binary's `common` harness
 //! via `super::common`.
 //!
-//! P4 additions (C4a/C4b/C4c):
+//! Additional test helpers:
 //! * [`check_moment_convergence`] — empirical mean/variance converge to analytic
 //!   `mean()`/`variance()` on a large seeded draw.
 //! * [`check_tail_stress`] — pdf ≥ 0, cdf ∈ [0,1], no NaN/±∞ across an
 //!   extreme-spanning grid.
-//! * [`check_param_sweep`] — pdf/cdf/quantile/moments over a slice of parameter
+//! * [`check_param_sweep`] — pdf/cdf/quantile/moments over a range of parameter
 //!   sets supplied by the caller.
 
 // `#[path]`-included per test binary, so the shared `pub` helpers look
@@ -30,7 +30,7 @@ pub mod sampling;
 pub mod symmetric;
 
 /// Asserts a continuous distribution's `pdf`, `cdf`, and `quantile` match the
-/// scipy fixture `name` over its stored grid, within AC-1 tolerances.
+/// scipy fixture `name` over its stored grid, within the distribution tolerances.
 ///
 /// # Arguments
 ///
@@ -221,7 +221,7 @@ fn same_int(x: f64, k: i64) -> bool {
 }
 
 /// Asserts that a large seeded sample's empirical mean and variance converge to
-/// `dist.mean()` and `dist.variance()` within documented sampling tolerances.
+/// `dist.mean()` and `dist.variance()` within the moment-convergence tolerances.
 ///
 /// Draws `n = 100_000` variates from a fixed seed and checks that the empirical
 /// moments lie within `atol + rtol * |expected|` of the theoretical values.
@@ -285,8 +285,8 @@ pub fn check_moment_convergence<D>(
 
 /// Asserts that a discrete distribution's `pmf` and `cdf` stay within valid
 /// ranges across a wide integer grid including boundary (k=0), body, and large k
-/// values where pmf decays to 0 and cdf saturates toward 1 (C4b discrete
-/// tail-stress guard).
+/// values where pmf decays to 0 and cdf saturates toward 1 (discrete tail-stress
+/// guard).
 ///
 /// Parallel to [`check_tail_stress`] for the `Pmf + Cdf` trait boundary: because
 /// `Pmf` and `Pdf` are separate traits, discrete distributions (Binomial, Poisson)
@@ -324,7 +324,7 @@ where
 }
 
 /// Asserts that pdf and cdf stay within valid ranges across an extreme-spanning
-/// grid including far-tail and boundary inputs (C4b tail-stress guard).
+/// grid including far-tail and boundary inputs (tail-stress guard).
 ///
 /// For every point in `xs`:
 /// - `pdf(x) ≥ 0` and is finite (no NaN, no ±∞ overflow).
@@ -358,7 +358,7 @@ where
 }
 
 /// Asserts that pdf/cdf/quantile/moments are consistent over a grid of
-/// parameterizations (C4c parameter-sweep).
+/// parameterizations (parameter-sweep).
 ///
 /// Each element of `param_cases` is a `(dist, ps)` pair: the helper asserts pdf
 /// ≥ 0 + cdf monotone at the same fixed x-grid as the fixture, and

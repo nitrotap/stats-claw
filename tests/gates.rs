@@ -1,4 +1,4 @@
-//! Quality gates (AC-8.2): every `unsafe` usage in the workspace's library
+//! Quality gates: every `unsafe` usage in the workspace's library
 //! sources must carry a `// SAFETY:` justification within the lines immediately
 //! preceding it, so that each escape from Rust's safety guarantees is deliberate,
 //! documented, and reviewable.

@@ -1,5 +1,5 @@
-"""Golden fixtures for the statistical-test family (AC-2) and the deferred AC-5
-categorical bootstrap-CI items.
+"""Golden fixtures for the statistical-test family and the categorical
+bootstrap-CI items.
 
 Run via ``python3 -m gen.gen_tests`` from ``stats-claw/reference``. Python
 runs here ONLY at generation time; ``cargo test`` reads the committed JSON offline.
@@ -246,8 +246,8 @@ def gen_friedman():
 
 
 # --------------------------------------------------------------------------- #
-# Exact rank-test null distributions (AC-2 / W2): small, distinct, untied data
-# so scipy's method="exact" is well-defined. Tolerances: p abs <= 1e-8.
+# Exact rank-test null distributions: small, distinct, untied data so scipy's
+# method="exact" is well-defined. Tolerances: p abs <= 1e-8.
 # --------------------------------------------------------------------------- #
 # Distinct, untied small samples for the exact Mann-Whitney U distribution.
 MWU_A = [1.0, 3.0, 5.0, 7.0, 9.0]
@@ -382,7 +382,7 @@ def gen_correlation():
 
 
 # --------------------------------------------------------------------------- #
-# AC-5 deferred: categorical bootstrap CIs, coverage, credible interval
+# Categorical bootstrap CIs, coverage, credible interval
 # --------------------------------------------------------------------------- #
 def _splitmix64_stream(seed, count):
     """Reproduce stats-claw's SplitMix64 next_u64 stream (for fixture parity)."""
@@ -494,10 +494,10 @@ def gen_boot_delta():
 
 
 # --------------------------------------------------------------------------- #
-# AC-2 log-space / extreme-p path (P5): scipy <dist>.logsf / logcdf at extreme
-# inputs, and test-level extreme-input log p-values. Tolerance: log values
-# rel <= 1e-9 (abs <= 1e-9 where |log| < 1, since a near-zero log has unbounded
-# relative sensitivity to a tiny absolute error).
+# Log-space / extreme-p path: scipy <dist>.logsf / logcdf at extreme inputs,
+# and test-level extreme-input log p-values. Tolerance: log values rel <= 1e-9
+# (abs <= 1e-9 where |log| < 1, since a near-zero log has unbounded relative
+# sensitivity to a tiny absolute error).
 # --------------------------------------------------------------------------- #
 def gen_logsf():
     """Per-distribution logsf/logcdf at body and extreme-tail points."""

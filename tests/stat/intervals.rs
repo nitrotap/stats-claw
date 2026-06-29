@@ -1,7 +1,5 @@
-//! AC-5 deferred interval items now satisfiable with the categorical track's
-//! fixtures: Cramér's V bootstrap CI (QA-CAT-010), delta bootstrap CI
-//! (QA-CAT-095), a coverage-rate simulation, and a Beta-posterior credible
-//! interval (AC-5 Story 5.2).
+//! Interval tests: Cramér's V bootstrap CI, paired delta bootstrap CI, a
+//! coverage-rate simulation, and a Beta-posterior credible interval.
 //!
 //! Provenance note: the `test_cramers_boot` / `test_boot_delta` fixtures are NOT
 //! independent scipy references — their bounds are produced by stats-claw's OWN

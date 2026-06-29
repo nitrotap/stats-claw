@@ -1,4 +1,4 @@
-//! Streaming-estimator suite (AC-7 / Story 7.2).
+//! Streaming-estimator suite.
 //!
 //! Asserts the online estimators in [`stats_claw::streaming`] match their batch
 //! counterparts within tolerance and run in bounded memory whose state size is

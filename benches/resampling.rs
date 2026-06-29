@@ -1,4 +1,4 @@
-//! Criterion batch-throughput benchmark for the resampling family (AC-7 / 7.1).
+//! Criterion batch-throughput benchmark for the resampling family.
 //!
 //! Gated workload: a **bootstrap of the median** — draw `B` with-replacement
 //! resamples of a sample and recompute the median on each, the realistic

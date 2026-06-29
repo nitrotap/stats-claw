@@ -1,4 +1,4 @@
-//! Criterion batch-throughput benchmark for the optimizer family (AC-7 / 7.1).
+//! Criterion batch-throughput benchmark for the optimizer family.
 //!
 //! Gated workload: a **multi-start conjugate-gradient sweep** — solve the
 //! Rosenbrock problem from many independent starting points to convergence. This

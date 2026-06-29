@@ -1,4 +1,4 @@
-# Authoritative Linux measurement environment for the AC-7 distributions SIMD gate.
+# Authoritative Linux measurement environment for the distributions SIMD throughput gate.
 #
 # The deployment target is Linux; the dev box is Apple Silicon under macOS. This
 # image runs as a NATIVE `linux/arm64` container (Docker `--platform linux/arm64`
