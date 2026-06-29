@@ -1,7 +1,7 @@
 //! Change-point detection algorithms.
 //!
 //! The single member is PELT (Pruned Exact Linear Time), which finds the
-//! penalized-optimal segmentation of a signal. It lives in the [`pelt`] submodule
+//! penalized-optimal segmentation of a signal. It lives in the `pelt` submodule
 //! and is re-exported here so callers name `change_point::pelt_l2` without the
 //! submodule path.
 //!

@@ -25,7 +25,7 @@ use crate::tests_stat::parametric::floor_to_i64;
 ///
 /// # Errors
 ///
-/// Propagates the validation errors of [`chi_squared_stat`]: empty, ragged,
+/// Propagates the validation errors of `chi_squared_stat`: empty, ragged,
 /// sub-2×2, or invalid-count tables.
 ///
 /// # Examples

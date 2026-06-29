@@ -98,7 +98,7 @@ pub fn mann_whitney_u(
 /// In [`Mode::Exact`] the p-value comes from the exact U null distribution
 /// ([`crate::tests_stat::exact::mann_whitney`]); in [`Mode::Asymptotic`] it comes
 /// from the same normal approximation as [`mann_whitney_u`]; [`Mode::Auto`] uses
-/// exact when the larger sample size is below [`EXACT_THRESHOLD`] **and** there
+/// exact when the larger sample size is below `EXACT_THRESHOLD` **and** there
 /// are no ties, otherwise asymptotic. The reported statistic (`U₁`) and effect
 /// size (rank-biserial) are identical across modes.
 ///

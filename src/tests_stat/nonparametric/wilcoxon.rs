@@ -113,7 +113,7 @@ pub fn wilcoxon_signed_rank(
 /// distribution ([`crate::tests_stat::exact::wilcoxon`]); in [`Mode::Asymptotic`]
 /// it comes from the same normal approximation as [`wilcoxon_signed_rank`];
 /// [`Mode::Auto`] uses exact when the number of nonzero differences is below
-/// [`EXACT_THRESHOLD`] **and** the absolute differences are untied, otherwise
+/// `EXACT_THRESHOLD` **and** the absolute differences are untied, otherwise
 /// asymptotic. The reported statistic matches [`wilcoxon_signed_rank`].
 ///
 /// # Arguments

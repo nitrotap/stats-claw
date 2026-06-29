@@ -2,7 +2,7 @@
 //!
 //! Houses Mann–Whitney U, Kruskal–Wallis H, the Wilcoxon signed-rank test, and
 //! the Friedman test. Each ranks its inputs with the shared mid-rank convention
-//! ([`crate::tests_stat::ranks`]) and takes its p-value from the matching
+//! (the shared mid-rank convention) and takes its p-value from the matching
 //! framework null distribution (normal approximation or chi-squared).
 
 pub mod friedman;

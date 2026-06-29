@@ -303,7 +303,7 @@ unsafe fn sample_neon(mean: f64, std_dev: f64, rng: &mut SplitMix64, out: &mut [
 
 /// AVX2 (`x86_64`) four-lane `f64` batch ziggurat fill.
 ///
-/// Analogous to [`sample_neon`] with four `f64` lanes: four fast-path candidates per
+/// Analogous to `sample_neon` with four `f64` lanes: four fast-path candidates per
 /// step, the affine transform applied with FMA, accepted lanes stored vectorized,
 /// rejected lanes resolved by the scalar oracle, and a scalar tail.
 ///

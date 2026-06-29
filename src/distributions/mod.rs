@@ -2,7 +2,7 @@
 //!
 //! This module defines the behaviour traits (`Pdf`/`Pmf`/`Cdf`/`Quantile`/
 //! `Moments`/`Sample`) every distribution implements, plus the shared
-//! [`bisection_quantile`] inverse-CDF solver and a small integer→float helper.
+//! `bisection_quantile` inverse-CDF solver and a small integer→float helper.
 //! The plain-data parameter structs for each distribution live in [`types`] and
 //! are re-exported here. Each concrete distribution lives in a subgroup folder
 //! (`symmetric/`, `positive/`, `sampling/`, `discrete/`) and implements these

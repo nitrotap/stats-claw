@@ -91,7 +91,7 @@ fn pairs_df(rows: usize, cols: usize) -> f64 {
 ///
 /// The statistic is `Σ (O − E)² / E` with expected counts `E_ij = rowᵢ·colⱼ / n`,
 /// and the p-value is the upper-tail probability `P(χ²_df ≥ statistic)` evaluated
-/// through [`ChiSquaredDistribution`]'s CDF.
+/// through [`crate::distributions::ChiSquaredDistribution`]'s CDF.
 ///
 /// # Arguments
 ///
@@ -104,7 +104,7 @@ fn pairs_df(rows: usize, cols: usize) -> f64 {
 ///
 /// # Errors
 ///
-/// Propagates the validation errors of [`chi_squared_stat`]: empty, ragged,
+/// Propagates the validation errors of `chi_squared_stat`: empty, ragged,
 /// sub-2×2, or invalid-count tables.
 ///
 /// # Examples

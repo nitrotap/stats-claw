@@ -149,7 +149,7 @@ pub fn ks_two_sample(first: &[f64], second: &[f64]) -> Result<TestResult> {
 /// is the exact finite-`n` distribution
 /// ([`crate::tests_stat::exact::ks`]); [`Mode::Asymptotic`] uses the asymptotic
 /// Kolmogorov tail (two-sided only); [`Mode::Auto`] picks exact below
-/// [`EXACT_THRESHOLD`].
+/// `EXACT_THRESHOLD`.
 ///
 /// # Arguments
 ///
@@ -229,7 +229,7 @@ pub fn ks_one_sample_mode(
 /// In [`Mode::Exact`] the p-value comes from the exact lattice-path count
 /// ([`crate::tests_stat::exact::ks`]); [`Mode::Asymptotic`] uses the asymptotic
 /// Kolmogorov tail (as [`ks_two_sample`]); [`Mode::Auto`] picks exact when the
-/// smaller sample is below [`EXACT_THRESHOLD`].
+/// smaller sample is below `EXACT_THRESHOLD`.
 ///
 /// # Arguments
 ///

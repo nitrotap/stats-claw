@@ -32,7 +32,7 @@
 //! ## Determinism
 //!
 //! For a given precision and input multiset the estimate is fully deterministic:
-//! the hash ([`hash`]) is a fixed bijective finalizer, register updates are
+//! the hash is a fixed bijective finalizer, register updates are
 //! order-independent maxima, and the estimator is a pure function of the registers.
 //!
 //! This base block backs the `CardinalityEstimation` computational method.
@@ -199,7 +199,7 @@ impl HyperLogLog {
 
     /// Adds a 64-bit element to the estimator, updating one register.
     ///
-    /// The element is scattered by the fixed finalizer ([`hash::hash64`]); the
+    /// The element is scattered by a fixed bijective finalizer; the
     /// leading `precision` bits of the hash select the register, and the register is
     /// raised to `max(current, 1 + leading_zeros(remaining bits))`. The update is a
     /// maximum, so it is idempotent in the element (re-adding the same value never
@@ -235,7 +235,7 @@ impl HyperLogLog {
     ///
     /// A pure function of the register array: the harmonic-mean raw estimate with
     /// the small-range (linear-counting) and large-range corrections applied as the
-    /// register state warrants (see [`estimate`]). An estimator with nothing added
+    /// register state warrants. An estimator with nothing added
     /// returns `0` exactly.
     ///
     /// The result is an *approximation* with relative standard error `≈ 1.04 / √m`
