@@ -60,6 +60,40 @@ assert_eq!(n.variance(), Some(1.0));
 Pre-stable (`0.x`): the public API is still being stabilized and may change before `1.0`.
 MSRV 1.93.
 
+## Releasing (maintainers)
+
+Pre-flight — all must be green:
+
+```sh
+cargo test
+cargo clippy --all-targets -- -D warnings
+cargo fmt --check
+```
+
+Verify the package without uploading:
+
+```sh
+cargo publish --dry-run   # packages + compiles from the tarball; "aborting upload due to dry run" = success
+cargo package --list      # exactly what ships: src/**, README.md, CHANGELOG.md, LICENSE-MIT, LICENSE-APACHE
+```
+
+Publish:
+
+```sh
+cargo login               # one-time: paste a token from https://crates.io/settings/tokens
+cargo publish
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+Notes:
+
+- Publishing is **permanent** — a version cannot be deleted, only withdrawn with
+  `cargo yank` (reverse with `cargo yank --undo`). Ship fixes as a new version.
+- The `--dry-run` "ignoring test/benchmark" warnings are expected: `tests/` and `benches/`
+  are intentionally excluded from the published tarball (only `src/**` + the docs/license
+  files ship).
+- The source repository can stay private; `cargo publish` uploads only the packaged crate.
+
 ## License
 
 Dual-licensed under either of
