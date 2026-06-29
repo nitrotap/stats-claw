@@ -1,0 +1,21 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.ttest_1samp + t.logsf/logcdf",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "df": 4.0,
+  "log_p_greater": -49.11197265463671,
+  "log_p_less": -4.687499999698901e-22,
+  "log_p_two_sided": -48.41882547407676,
+  "p_two_sided": 9.374999999397802e-22,
+  "popmean": 0.0,
+  "sample": [
+    100.0,
+    100.001,
+    99.999,
+    100.0005,
+    99.9995
+  ],
+  "statistic": 282842.7124732685
+}

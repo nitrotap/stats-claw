@@ -1,0 +1,35 @@
+{
+  "_provenance": {
+    "library": "stats-claw SplitMix64 observation-bootstrap + percentile CI (self-round-trip; not a scipy reference)",
+    "seed": 42,
+    "version": "0.1.0"
+  },
+  "alpha": 0.05,
+  "b": 10000,
+  "ci_high": 0.22344376943490143,
+  "ci_low": 0.06876124462597856,
+  "point": 0.07288548646350931,
+  "seed": 42,
+  "table": [
+    [
+      10,
+      20,
+      30
+    ],
+    [
+      6,
+      9,
+      17
+    ],
+    [
+      8,
+      12,
+      25
+    ],
+    [
+      11,
+      14,
+      20
+    ]
+  ]
+}

@@ -1,0 +1,104 @@
+[package]
+name = "stats-claw"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.93"
+license = "MIT OR Apache-2.0"
+# Source repository is private; point published metadata at the docs instead of a
+# repository link that would 404 for the public.
+documentation = "https://docs.rs/stats-claw"
+description = "Data science on the hot path: in-process, zero-dependency statistical computing for Rust (distributions, hypothesis tests, resampling) validated against scipy"
+keywords = ["statistics", "hypothesis-testing", "scipy", "distributions", "numerics"]
+categories = ["science", "mathematics"]
+# Crate-local README + dual-license files (must live inside the crate dir so
+# `cargo package` can bundle them).
+readme = "README.md"
+
+# Whitelist of what ships in the published tarball. The library compiles purely
+# from `src/**/*.rs`. This whitelist keeps `reference/` (Python fixture tooling +
+# golden JSON), `tests/`, and `benches/` out of the tarball. Patterns are
+# anchored to the package root with a leading `/` (an unanchored `README.md`
+# would match `benches/results/README.md` at any depth and leak `benches/` into
+# the tarball).
+include = ["/src/**/*.rs", "/README.md", "/CHANGELOG.md", "/LICENSE-MIT", "/LICENSE-APACHE"]
+
+[lib]
+name = "stats_claw"
+path = "src/lib.rs"
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }   # test-only: golden-fixture deserialization
+serde_json = "1"                                    # test-only: golden-fixture parsing
+criterion = "0.5"                                   # bench-only: throughput/latency
+
+# Bench-only — never compiled into the shipped crate, so the zero-runtime-dep
+# guarantee is preserved. One bench per numeric family.
+[[bench]]
+name = "distributions"
+harness = false
+
+[[bench]]
+name = "optimizers"
+harness = false
+
+[[bench]]
+name = "stat_tests"
+harness = false
+
+[[bench]]
+name = "algorithms"
+harness = false
+
+[[bench]]
+name = "resampling"
+harness = false
+
+# ---------------------------------------------------------------------------
+# Lints — strict, standalone (copied from the source workspace's shared config).
+#
+# All four clippy lint *groups* are denied. Group lints carry priority = -1 so
+# that any individual lint relaxations (priority 0, the default) win over them.
+# `restriction` is intentionally NOT enabled wholesale; its high-signal members
+# are opted into individually.
+# ---------------------------------------------------------------------------
+
+[lints.rust]
+# Justified `unsafe` is permitted (relaxed forbid → deny) so the `core::arch`
+# SIMD batch paths compile: each intrinsic block is feature-gated by a runtime
+# detection and carries a `// SAFETY:` line. No naked/unjustified unsafe.
+unsafe_code = "deny"
+missing_docs = "deny"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+elided_lifetimes_in_paths = "warn"
+rust_2018_idioms = { level = "deny", priority = -1 }
+future_incompatible = { level = "deny", priority = -1 }
+nonstandard_style = { level = "deny", priority = -1 }
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+nursery = { level = "deny", priority = -1 }
+cargo = { level = "deny", priority = -1 }
+# The source repository is intentionally private, so the published crate omits
+# `package.repository` and points consumers at the hosted docs instead. Allow the
+# single cargo lint that would otherwise require a repository link; every other
+# `clippy::cargo` check stays denied above.
+cargo_common_metadata = "allow"
+
+# Curated high-value `restriction` lints (not part of any group above).
+unwrap_used = "deny"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+dbg_macro = "deny"
+print_stderr = "warn"
+indexing_slicing = "warn"
+float_cmp_const = "warn"
+mem_forget = "deny"
+exit = "warn"
+str_to_string = "warn"
+unwrap_in_result = "warn"

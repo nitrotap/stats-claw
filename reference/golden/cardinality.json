@@ -1,0 +1,28 @@
+{
+  "_provenance": {
+    "library": "python set() exact distinct count (no external library)",
+    "seed": 1311768467463790320,
+    "version": "stdlib"
+  },
+  "cases": [
+    {
+      "exact_distinct": 991,
+      "length": 1000
+    },
+    {
+      "exact_distinct": 9201,
+      "length": 10000
+    },
+    {
+      "exact_distinct": 48599,
+      "length": 100000
+    }
+  ],
+  "element_modulus": 60000,
+  "error_bound_multiple": 3.0,
+  "lcg_increment": 1442695040888963407,
+  "lcg_multiplier": 6364136223846793005,
+  "precision": 14,
+  "seed": 1311768467463790320,
+  "standard_error": 0.008125
+}

@@ -1,0 +1,32 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.chi2_contingency(correction=False)",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "df": 6,
+  "p_value": 0.9256962455930868,
+  "statistic": 1.9336750658761532,
+  "table": [
+    [
+      10,
+      20,
+      30
+    ],
+    [
+      6,
+      9,
+      17
+    ],
+    [
+      8,
+      12,
+      25
+    ],
+    [
+      11,
+      14,
+      20
+    ]
+  ]
+}

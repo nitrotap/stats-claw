@@ -1,0 +1,32 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.ks_1samp/ks_2samp(method='exact')",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "one_p_greater": 0.8949430353314615,
+  "one_p_less": 0.5238827430443518,
+  "one_p_two_sided": 0.9085351243205685,
+  "one_statistic_greater": 0.06680720126885809,
+  "one_statistic_less": 0.18353753872598688,
+  "one_statistic_two_sided": 0.18353753872598688,
+  "sample": [
+    -0.5,
+    0.1,
+    0.8,
+    -1.2,
+    0.3,
+    1.5,
+    -0.3,
+    0.9
+  ],
+  "sample_b": [
+    0.2,
+    -0.1,
+    1.1,
+    -0.7,
+    0.5
+  ],
+  "two_p": 0.9992229992229992,
+  "two_statistic": 0.175
+}

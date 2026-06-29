@@ -1,0 +1,32 @@
+{
+  "_provenance": {
+    "library": "statsmodels.stats.contingency_tables.mcnemar",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "large": [
+    [
+      30,
+      12
+    ],
+    [
+      40,
+      18
+    ]
+  ],
+  "p_large": 0.00010321744149513965,
+  "p_large_cc": 0.00018095049043756332,
+  "p_small_exact": 0.625,
+  "small": [
+    [
+      5,
+      1
+    ],
+    [
+      3,
+      6
+    ]
+  ],
+  "stat_large": 15.076923076923077,
+  "stat_large_cc": 14.01923076923077
+}

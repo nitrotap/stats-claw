@@ -1,0 +1,33 @@
+{
+  "_provenance": {
+    "library": "analytic",
+    "seed": null,
+    "version": "n/a"
+  },
+  "quadratic": {
+    "center": [
+      3.0,
+      -2.0
+    ],
+    "min_value": 0.0,
+    "minimizer": [
+      3.0,
+      -2.0
+    ],
+    "x0": [
+      0.0,
+      0.0
+    ]
+  },
+  "rosenbrock": {
+    "min_value": 0.0,
+    "minimizer": [
+      1.0,
+      1.0
+    ],
+    "x0": [
+      -1.2,
+      1.0
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.wilcoxon(method='exact')",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "a": [
+    1.0,
+    2.0,
+    3.0,
+    4.0,
+    5.0,
+    6.0,
+    7.0
+  ],
+  "b": [
+    1.7,
+    2.3,
+    3.9,
+    5.3,
+    3.2,
+    8.1,
+    6.0
+  ],
+  "p_greater": 0.765625,
+  "p_less": 0.2890625,
+  "p_two_sided": 0.578125,
+  "w_greater": 10.0,
+  "w_less": 10.0,
+  "w_two_sided": 10.0
+}

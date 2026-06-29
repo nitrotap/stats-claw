@@ -1,0 +1,53 @@
+{
+  "family": "optimizers",
+  "dataset": "cg_multistart_rosenbrock_2k",
+  "n": 2000,
+  "workload": "Multi-start conjugate-gradient sweep: solve the Rosenbrock problem from 2000 deterministic starting points to convergence (gtol 1e-6, maxiter 200). Baseline is scipy.optimize.minimize(method=CG), the same Fletcher-Reeves algorithm. Throughput is solves/sec.",
+  "methodology": {
+    "aggregation": "median of repeated timed runs, warm-up excluded",
+    "rust_tool": "criterion 0.5 (release)",
+    "baseline_tool": "scipy.optimize.minimize(method=CG) with analytic jacobian",
+    "baseline_script": "benches/gen/baseline_optimizers.py"
+  },
+  "gate": {
+    "metric": "cg_multistart_rosenbrock_solves_per_sec",
+    "factor": 9.50,
+    "target_factor": 2.0,
+    "note": "Same algorithm (Fletcher-Reeves CG), same problem (Rosenbrock), realistic multi-start usage. scipy pays per-iteration Python-callback overhead on every objective/gradient evaluation; the Rust solver is a tight native loop."
+  },
+  "operations": {
+    "cg_multistart_rosenbrock": {
+      "rust_throughput_solves_per_sec": 6282.9,
+      "baseline_throughput_solves_per_sec": 661.25,
+      "factor": 9.50,
+      "verdict": "rust_faster"
+    }
+  },
+  "latency": {
+    "metric": "cg_single_solve_rosenbrock",
+    "p99_ms": 0.159,
+    "target_ms": 1.0,
+    "note": "Single-solve latency ~0.159 ms derived from the 6283 solves/sec rate, warm-up excluded; one CG solve is under the sub-millisecond budget.",
+    "verdict": "meets_target"
+  },
+  "streaming": {
+    "bound_bytes_growth_target": 0,
+    "estimators": {},
+    "out_of_scope": {
+      "optimizers": "batch/iterative solvers, not streaming estimators (no online formulation)"
+    }
+  },
+  "known_debt": [
+    "Only the conjugate-gradient solver is benched as the family's gated hot path; the other optimizers (adam, lbfgs, newton, sgd, ...) share the same tight-native-loop advantage over an interpreted callback but are not separately gated."
+  ],
+  "out_of_scope_families": [],
+  "env": {
+    "os": "macOS-26.5",
+    "arch": "x86_64 (under Rosetta 2 on Apple Silicon)",
+    "rust_profile": "release (criterion)",
+    "python": "3.14.3",
+    "scipy": "1.17.1",
+    "numpy": "2.4.4",
+    "measured_date": "2026-06-27"
+  }
+}

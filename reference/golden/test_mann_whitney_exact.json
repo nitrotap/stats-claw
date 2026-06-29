@@ -1,0 +1,26 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.mannwhitneyu(method='exact')",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "a": [
+    1.0,
+    3.0,
+    5.0,
+    7.0,
+    9.0
+  ],
+  "b": [
+    2.0,
+    4.0,
+    6.0,
+    8.0
+  ],
+  "p_greater": 0.5476190476190477,
+  "p_less": 0.5476190476190477,
+  "p_two_sided": 1.0,
+  "u_greater": 10.0,
+  "u_less": 10.0,
+  "u_two_sided": 10.0
+}

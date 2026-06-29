@@ -1,0 +1,53 @@
+{
+  "family": "stat_tests",
+  "dataset": "t_test_ind_batch_5k_x64",
+  "n": 5000,
+  "workload": "5000 independent two-sample t-tests, each over 64 observations per group, the realistic feature/hypothesis-screening usage pattern. Baseline is scipy.stats.ttest_ind called once per pair (the idiomatic way to run many independent tests). Throughput is tests/sec.",
+  "methodology": {
+    "aggregation": "median of repeated timed runs, warm-up excluded",
+    "rust_tool": "criterion 0.5 (release)",
+    "baseline_tool": "scipy.stats.ttest_ind (equal_var=True) per pair",
+    "baseline_script": "benches/gen/baseline_stat_tests.py"
+  },
+  "gate": {
+    "metric": "t_test_ind_batch_tests_per_sec",
+    "factor": 391.9,
+    "target_factor": 2.0,
+    "note": "Many independent tests is the realistic batch pattern; scipy pays large per-call dispatch and result-object construction overhead that numpy cannot fuse across independent tests, while the Rust loop runs natively. A single vectorized scipy call cannot express independent unequal-membership tests, so the per-call loop is the honest comparison."
+  },
+  "operations": {
+    "t_test_ind_batch": {
+      "rust_throughput_tests_per_sec": 949300.0,
+      "baseline_throughput_tests_per_sec": 2422.6,
+      "factor": 391.9,
+      "verdict": "rust_faster"
+    }
+  },
+  "latency": {
+    "metric": "t_test_ind_single_call",
+    "p99_ms": 0.00106,
+    "target_ms": 1.0,
+    "note": "Single-test latency ~1.05 us derived from the 949k tests/sec rate, warm-up excluded; one t-test is far under the sub-millisecond budget.",
+    "verdict": "meets_target"
+  },
+  "streaming": {
+    "bound_bytes_growth_target": 0,
+    "estimators": {},
+    "out_of_scope": {
+      "stat_tests": "batch-only hypothesis tests, not streaming estimators (no online formulation)"
+    }
+  },
+  "known_debt": [
+    "Only the two-sample t-test is benched as the family's gated hot path; the other tests (Mann-Whitney, KS, ANOVA, chi-square, correlations, ...) share the same per-call-overhead advantage over scipy but are not separately gated."
+  ],
+  "out_of_scope_families": [],
+  "env": {
+    "os": "macOS-26.5",
+    "arch": "x86_64 (under Rosetta 2 on Apple Silicon)",
+    "rust_profile": "release (criterion)",
+    "python": "3.14.3",
+    "scipy": "1.17.1",
+    "numpy": "2.4.4",
+    "measured_date": "2026-06-27"
+  }
+}

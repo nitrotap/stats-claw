@@ -1,0 +1,50 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.levene(center='mean')/bartlett",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "bartlett_df": 2.0,
+  "bartlett_p": 0.2223400279329015,
+  "bartlett_statistic": 3.007094823090408,
+  "groups": [
+    [
+      5.1,
+      4.9,
+      6.2,
+      5.7,
+      5.0,
+      6.1,
+      4.8,
+      5.5,
+      5.9,
+      5.3
+    ],
+    [
+      6.2,
+      6.8,
+      5.9,
+      7.1,
+      6.5,
+      6.0,
+      7.3,
+      6.7,
+      6.1,
+      6.9
+    ],
+    [
+      4.5,
+      5.1,
+      4.8,
+      5.3,
+      4.9,
+      5.0,
+      4.7,
+      5.2
+    ]
+  ],
+  "levene_df_between": 2.0,
+  "levene_df_within": 25.0,
+  "levene_p": 0.07180343804801573,
+  "levene_statistic": 2.9318642350557296
+}

@@ -1,0 +1,21 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.fisher_exact",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "odds_ratio": 0.030303030303030304,
+  "p_greater": 0.9999663480953022,
+  "p_less": 0.0013797280926100418,
+  "p_two_sided": 0.0027594561852200836,
+  "table": [
+    [
+      1,
+      9
+    ],
+    [
+      11,
+      3
+    ]
+  ]
+}

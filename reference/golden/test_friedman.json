@@ -1,0 +1,43 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.friedmanchisquare",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "df": 2.0,
+  "kendalls_w": 0.95,
+  "measurements": [
+    [
+      7,
+      9,
+      8,
+      6,
+      7,
+      8,
+      9,
+      7
+    ],
+    [
+      6,
+      5,
+      7,
+      5,
+      6,
+      6,
+      7,
+      5
+    ],
+    [
+      8,
+      9,
+      9,
+      7,
+      8,
+      9,
+      9,
+      8
+    ]
+  ],
+  "p_value": 0.0005004514334406107,
+  "statistic": 15.2
+}

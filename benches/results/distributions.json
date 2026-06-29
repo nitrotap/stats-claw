@@ -1,0 +1,99 @@
+{
+  "family": "distributions",
+  "dataset": "normal_batch_100k",
+  "n": 100000,
+  "workload": "Normal batch elementwise ops over an N-element grid: pdf(xs), cdf(xs), and sample N variates. This is the genuine dense batch hot path. The Python baseline is the vectorized scipy.stats.norm op (norm.pdf / norm.cdf / norm.rvs) — the honest apples-to-apples comparison. The Rust pdf/cdf run the native-SIMD batch path (NormalDistribution::pdf_batch / cdf_batch); pdf is vectorized with a hand-written core::arch exp (NEON on aarch64, AVX2+FMA on x86_64) and is the gated metric. The Rust sample runs the native-SIMD batch ziggurat (NormalDistribution::sample_batch, src/distributions/ziggurat.rs), runtime-dispatched NEON/AVX2/scalar (P1 / decision E1a).",
+  "methodology": {
+    "aggregation": "median of repeated timed runs, warm-up excluded",
+    "rust_tool": "criterion 0.5 (release)",
+    "baseline_tool": "vectorized scipy.stats.norm (norm.pdf / norm.cdf / norm.rvs over an N-element array)",
+    "baseline_script": "benches/gen/baseline.py",
+    "linux_measurement": "Measured authoritatively on the Linux deployment target inside a native linux/arm64 Docker container (NEON), not the dev box. Reproduce with benches/simd-linux/measure.sh.",
+    "elision_guard": "The sample bench reduces the WHOLE output buffer (sum) inside black_box, not just the first element. Anchoring only samples[0] let the rustc-1.96 Linux toolchain hoist most of the ziggurat fill and inflate sample throughput ~12x (an elision artifact); summing every element forces the full fill to be materialized so the recorded factor is honest."
+  },
+  "gate": {
+    "metric": "normal_pdf_batch_throughput",
+    "factor": 12.487,
+    "target_factor": 2.0,
+    "note": "MET on the Linux target. The gated metric is the dense batch pdf op (NormalDistribution::pdf_batch) vs vectorized scipy.stats.norm.pdf, measured on native linux/arm64 (NEON). After D4 step 1 (algorithmic: Cody rational erf) and D4 step 2 (hand-written core::arch SIMD: NEON/AVX2 vectorized exp for the pdf hot loop, relaxing unsafe_code forbid->deny with per-block // SAFETY: justifications per AC-8.2), batch pdf reaches 12.487x in this re-measurement (the gate stays the pdf op; the small drift from the prior 14.228x is run-to-run/baseline variance, well above 2.0x). cdf clears the bar at 2.252x (batch layout; erf stays scalar Cody for tail accuracy). NEW (P1 / E1a): the batch sample op now runs a native-SIMD ziggurat (NormalDistribution::sample_batch) and clears 2.0x at 3.451x vs numpy's vectorized ziggurat (norm.rvs) — the C1 residual is closed by code. The gate remains the pdf op (no metric swap); sample is reported below as a passing op, not gated."
+  },
+  "operations": {
+    "pdf": {
+      "rust_throughput_elems_per_sec": 904429952.88,
+      "baseline_throughput_elems_per_sec": 72427687.42,
+      "factor": 12.487,
+      "verdict": "rust_faster_meets_target",
+      "note": "Native linux/arm64 NEON vectorized exp (NormalDistribution::pdf_batch). 904.4 M/s vs vectorized scipy.stats.norm.pdf 72.4 M/s. The same source on the macOS dev box (rustc 1.93) measures far lower; the authoritative number is this native linux/arm64 (rustc 1.96) run."
+    },
+    "cdf": {
+      "rust_throughput_elems_per_sec": 148304625.55,
+      "baseline_throughput_elems_per_sec": 65842711.23,
+      "factor": 2.252,
+      "verdict": "rust_faster_meets_target",
+      "note": "erf stays scalar (Cody rational, kept for >=1e-16 tail accuracy); the batch layout (cdf_batch into a reused buffer) plus the fast erf clears 2.0x on native ARM Linux. Not the gated metric, but above the bar."
+    },
+    "sample_batch": {
+      "rust_throughput_elems_per_sec": 538054054.97,
+      "baseline_throughput_elems_per_sec": 155904932.33,
+      "factor": 3.451,
+      "verdict": "rust_faster_meets_target",
+      "note": "NEW (P1 / decision E1a). Native-SIMD batch ziggurat (NormalDistribution::sample_batch, Marsaglia-Tsang / Doornik integer form; src/distributions/ziggurat.rs), runtime-dispatched NEON (2 f64 lanes) / AVX2+FMA (4) / scalar, with per-block // SAFETY:. 538.1 M/s vs numpy's vectorized SIMD ziggurat norm.rvs 155.9 M/s = 3.451x — clears 2.0x. This REPLACES the prior 0.523x scalar Box-Muller residual (C1): a vectorized ziggurat beats numpy's vectorized RNG on the deployment target. NOT the gated metric (the gate remains the pdf op); reported as a passing op. The sample bench reduces the whole output buffer so the fill cannot be elided (see methodology.elision_guard). On the macOS dev box (rustc 1.93) this op measures ~0.46x; the authoritative environment is native linux/arm64 (rustc 1.96, NEON), consistent with how the committed pdf number is measured."
+    },
+    "sample_per_draw": {
+      "rust_throughput_elems_per_sec": 77668313.30,
+      "baseline_throughput_elems_per_sec": 6244536.03,
+      "factor": 12.44,
+      "verdict": "rust_faster",
+      "note": "DISCLOSED FOR CONTEXT, NOT THE GATE. Per-draw (online) sampling via the scalar cached Box-Muller Sample::sample vs stdlib random.gauss: Rust's native draw loop beats an interpreted per-call loop. A different workload (online/streaming) and baseline (stdlib, not vectorized scipy); gating on it would be a favorable swap, which this record does not do. The batch sample_batch ziggurat above is the genuine apples-to-apples op."
+    }
+  },
+  "simd": {
+    "approach": "Hand-written core::arch SIMD (std-only intrinsics, NOT a third-party dependency, so the zero-runtime-dependency NFR holds), runtime-dispatched per CPU. pdf/cdf kernels in src/distributions/simd.rs; the sample ziggurat kernels in src/distributions/ziggurat.rs.",
+    "arches": {
+      "aarch64": "NEON, 2 f64 lanes (float64x2_t); selected via std::arch::is_aarch64_feature_detected!(\"neon\"). This is the path measured authoritatively here (pdf and sample).",
+      "x86_64": "AVX2+FMA, 4 f64 lanes (__m256d); selected via is_x86_feature_detected!(\"avx2\"/\"fma\"). Implemented for both pdf and the sample ziggurat; to be measured authoritatively on an x86_64 Linux CI runner.",
+      "fallback": "Scalar Cody-erf / Cephes-exp path (pdf/cdf) and scalar ziggurat (sample) for any other target or a CPU lacking the feature; also the per-lane correctness oracle."
+    },
+    "kernel": "pdf: vectorized exp via Cephes-style range reduction exp(x)=2^k*exp(r), k=round(x/ln2), degree-11 Taylor on the reduced r, 2^k built by writing the IEEE-754 exponent field, accurate to <=1e-12 relative. sample: Marsaglia-Tsang ziggurat (Doornik 2005 integer form), 128 equal-area layers; one 32-bit word per fast draw (i=j&127, accept if |j|<ZIG_K[i], x=j*ZIG_W[i]); the rare wedge/tail reject falls back to the scalar ziggurat per-lane so the distribution is exact. The lanes vectorize the fast-path arithmetic + the mean+std_dev*z affine transform.",
+    "correctness": "Ziggurat tables checked by a construction invariant (ZIG_F[i]=exp(-0.5*(ZIG_W[i]*2^31)^2)); the scalar ziggurat and the active SIMD path each pass empirical mean/variance + 1% KS goodness-of-fit and seeded byte-reproducibility tests (src/distributions/ziggurat.rs, tests/dist/symmetric.rs).",
+    "unsafe": "AC-8.2 permits justified unsafe. workspace unsafe_code relaxed forbid->deny; every intrinsic kernel is feature-gated by a runtime detection and carries a // SAFETY: line enforced by tests/gates.rs."
+  },
+  "latency": {
+    "metric": "normal_pdf_single_call",
+    "p99_ms": 0.0000011,
+    "target_ms": 1.0,
+    "note": "Per-element batch pdf cost ~1.09 ns derived from 919.6 Melem/s on native linux/arm64 NEON, warm-up excluded; a single evaluation is far under the sub-millisecond budget.",
+    "verdict": "meets_target"
+  },
+  "streaming": {
+    "bound_bytes_growth_target": 0,
+    "estimators": {
+      "RunningMoments": { "state_bytes": 24, "growth_bytes": 0, "scope": "in_scope" },
+      "P2Quantile": { "state_bytes": 168, "growth_bytes": 0, "scope": "in_scope" }
+    },
+    "out_of_scope": {
+      "distributions_pdf_cdf": "dense elementwise math, not a streaming estimator",
+      "stat_tests": "batch-only",
+      "optimizers": "batch/iterative, not a streaming estimator"
+    }
+  },
+  "known_debt": [
+    "The x86_64 AVX2+FMA SIMD paths (pdf exp and the sample ziggurat) are implemented and share the tested polynomial/tables, but are measured authoritatively only on aarch64 here; an x86_64 Linux CI run should confirm their factors.",
+    "Environment sensitivity: the same ziggurat source measures ~0.46x sample on the macOS dev box (rustc 1.93) vs 3.451x on native linux/arm64 (rustc 1.96, NEON) — a toolchain/OS codegen difference, not a measurement error. The authoritative deployment-target environment (native linux/arm64) is the recorded one, consistent with the pdf number. The elision guard (whole-buffer reduction) rules out the fill being optimized away."
+  ],
+  "history": [
+    "P1 (decision E1a, this revision): the prior 0.523x scalar Box-Muller sample residual (ledger row C1) is closed by code. NormalDistribution::sample_batch replaces the scalar hot path with a native-SIMD ziggurat that clears 2.0x at 3.451x vs numpy's vectorized ziggurat on the deployment target. The gated metric was NOT changed (it remains the pdf op); sample is now a passing op, reported alongside the gate."
+  ],
+  "out_of_scope_families": [],
+  "env": {
+    "os": "Linux 6.12.76-linuxkit (Debian bookworm, native linux/arm64 Docker container)",
+    "arch": "aarch64 (native, Docker, NEON)",
+    "host": "Apple M3 Max (Docker runs linux/arm64 natively, no Rosetta)",
+    "rust_profile": "release (criterion)",
+    "rustc": "1.96.0",
+    "python": "3.11.2",
+    "scipy": "1.10.1",
+    "numpy": "1.24.2",
+    "measured_date": "2026-06-28"
+  }
+}

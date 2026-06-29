@@ -1,0 +1,43 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.pearsonr/spearmanr/kendalltau",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "kendall_p_greater": 2.755731922398589e-07,
+  "kendall_p_less": 1.0,
+  "kendall_p_two_sided": 5.511463844797178e-07,
+  "kendall_tau": 0.9999999999999999,
+  "pearson_p_greater": 3.8419056811128725e-12,
+  "pearson_p_less": 0.9999999999961581,
+  "pearson_p_two_sided": 7.683811362225745e-12,
+  "pearson_r": 0.9988484051067446,
+  "spearman_p_greater": 3.32344871101593e-64,
+  "spearman_p_less": 1.0,
+  "spearman_p_two_sided": 6.64689742203186e-64,
+  "spearman_r": 0.9999999999999999,
+  "x": [
+    1.0,
+    2.1,
+    2.9,
+    4.2,
+    5.0,
+    5.8,
+    7.1,
+    8.0,
+    9.2,
+    10.1
+  ],
+  "y": [
+    2.2,
+    3.9,
+    6.1,
+    7.8,
+    10.2,
+    11.7,
+    14.3,
+    15.9,
+    18.1,
+    20.4
+  ]
+}

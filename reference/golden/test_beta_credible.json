@@ -1,0 +1,15 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.beta.ppf",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "alpha": 0.05,
+  "alpha0": 1.0,
+  "beta0": 1.0,
+  "ci_high": 0.8907365561809019,
+  "ci_low": 0.39025744042757876,
+  "posterior_mean": 0.6666666666666666,
+  "successes": 7,
+  "trials": 10
+}

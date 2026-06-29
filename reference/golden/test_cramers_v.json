@@ -1,0 +1,30 @@
+{
+  "_provenance": {
+    "library": "scipy.stats.contingency.association(method='cramer')",
+    "seed": null,
+    "version": "1.17.1"
+  },
+  "cramers_v": 0.07288548646350931,
+  "table": [
+    [
+      10,
+      20,
+      30
+    ],
+    [
+      6,
+      9,
+      17
+    ],
+    [
+      8,
+      12,
+      25
+    ],
+    [
+      11,
+      14,
+      20
+    ]
+  ]
+}

@@ -1,0 +1,326 @@
+{
+  "_provenance": {
+    "library": "mlxtend.frequent_patterns.apriori + association_rules (pandas 3.0.2)",
+    "seed": null,
+    "version": "0.24.0"
+  },
+  "itemsets": [
+    {
+      "items": [
+        0
+      ],
+      "support": 0.75
+    },
+    {
+      "items": [
+        1
+      ],
+      "support": 0.75
+    },
+    {
+      "items": [
+        2
+      ],
+      "support": 0.625
+    },
+    {
+      "items": [
+        3
+      ],
+      "support": 0.375
+    },
+    {
+      "items": [
+        4
+      ],
+      "support": 0.375
+    },
+    {
+      "items": [
+        0,
+        1
+      ],
+      "support": 0.625
+    },
+    {
+      "items": [
+        0,
+        2
+      ],
+      "support": 0.375
+    },
+    {
+      "items": [
+        0,
+        4
+      ],
+      "support": 0.375
+    },
+    {
+      "items": [
+        1,
+        2
+      ],
+      "support": 0.5
+    },
+    {
+      "items": [
+        0,
+        1,
+        2
+      ],
+      "support": 0.375
+    }
+  ],
+  "min_support": 0.3,
+  "min_threshold": 0.5,
+  "rule_metric": "confidence",
+  "rules": [
+    {
+      "antecedent": [
+        0
+      ],
+      "confidence": 0.8333333333333334,
+      "consequent": [
+        1
+      ],
+      "conviction": 1.5000000000000004,
+      "leverage": 0.0625,
+      "lift": 1.1111111111111112,
+      "support": 0.625
+    },
+    {
+      "antecedent": [
+        0
+      ],
+      "confidence": 0.5,
+      "consequent": [
+        1,
+        2
+      ],
+      "conviction": 1.0,
+      "leverage": 0.0,
+      "lift": 1.0,
+      "support": 0.375
+    },
+    {
+      "antecedent": [
+        0
+      ],
+      "confidence": 0.5,
+      "consequent": [
+        2
+      ],
+      "conviction": 0.75,
+      "leverage": -0.09375,
+      "lift": 0.8,
+      "support": 0.375
+    },
+    {
+      "antecedent": [
+        0
+      ],
+      "confidence": 0.5,
+      "consequent": [
+        4
+      ],
+      "conviction": 1.25,
+      "leverage": 0.09375,
+      "lift": 1.3333333333333333,
+      "support": 0.375
+    },
+    {
+      "antecedent": [
+        0,
+        1
+      ],
+      "confidence": 0.6,
+      "consequent": [
+        2
+      ],
+      "conviction": 0.9375,
+      "leverage": -0.015625,
+      "lift": 0.96,
+      "support": 0.375
+    },
+    {
+      "antecedent": [
+        0,
+        2
+      ],
+      "confidence": 1.0,
+      "consequent": [
+        1
+      ],
+      "conviction": null,
+      "leverage": 0.09375,
+      "lift": 1.3333333333333333,
+      "support": 0.375
+    },
+    {
+      "antecedent": [
+        1
+      ],
+      "confidence": 0.8333333333333334,
+      "consequent": [
+        0
+      ],
+      "conviction": 1.5000000000000004,
+      "leverage": 0.0625,
+      "lift": 1.1111111111111112,
+      "support": 0.625
+    },
+    {
+      "antecedent": [
+        1
+      ],
+      "confidence": 0.5,
+      "consequent": [
+        0,
+        2
+      ],
+      "conviction": 1.25,
+      "leverage": 0.09375,
+      "lift": 1.3333333333333333,
+      "support": 0.375
+    },
+    {
+      "antecedent": [
+        1
+      ],
+      "confidence": 0.6666666666666666,
+      "consequent": [
+        2
+      ],
+      "conviction": 1.1249999999999998,
+      "leverage": 0.03125,
+      "lift": 1.0666666666666667,
+      "support": 0.5
+    },
+    {
+      "antecedent": [
+        1,
+        2
+      ],
+      "confidence": 0.75,
+      "consequent": [
+        0
+      ],
+      "conviction": 1.0,
+      "leverage": 0.0,
+      "lift": 1.0,
+      "support": 0.375
+    },
+    {
+      "antecedent": [
+        2
+      ],
+      "confidence": 0.6,
+      "consequent": [
+        0
+      ],
+      "conviction": 0.625,
+      "leverage": -0.09375,
+      "lift": 0.7999999999999999,
+      "support": 0.375
+    },
+    {
+      "antecedent": [
+        2
+      ],
+      "confidence": 0.6,
+      "consequent": [
+        0,
+        1
+      ],
+      "conviction": 0.9375,
+      "leverage": -0.015625,
+      "lift": 0.96,
+      "support": 0.375
+    },
+    {
+      "antecedent": [
+        2
+      ],
+      "confidence": 0.8,
+      "consequent": [
+        1
+      ],
+      "conviction": 1.2500000000000002,
+      "leverage": 0.03125,
+      "lift": 1.0666666666666667,
+      "support": 0.5
+    },
+    {
+      "antecedent": [
+        4
+      ],
+      "confidence": 1.0,
+      "consequent": [
+        0
+      ],
+      "conviction": null,
+      "leverage": 0.09375,
+      "lift": 1.3333333333333333,
+      "support": 0.375
+    }
+  ],
+  "transactions": [
+    [
+      1,
+      1,
+      1,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      1,
+      0,
+      1
+    ],
+    [
+      1,
+      1,
+      0,
+      1,
+      0
+    ],
+    [
+      1,
+      1,
+      1,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      0,
+      1,
+      1
+    ],
+    [
+      0,
+      1,
+      1,
+      0,
+      0
+    ],
+    [
+      1,
+      1,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      0,
+      1,
+      1,
+      0
+    ]
+  ]
+}

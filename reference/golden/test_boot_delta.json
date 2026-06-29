@@ -1,0 +1,37 @@
+{
+  "_provenance": {
+    "library": "stats-claw SplitMix64 paired-delta bootstrap + percentile CI (self-round-trip; not a scipy reference)",
+    "seed": 777,
+    "version": "0.1.0"
+  },
+  "after": [
+    14.0,
+    16.0,
+    13.0,
+    12.0,
+    15.0,
+    14.0,
+    18.0,
+    11.0,
+    15.0,
+    14.0
+  ],
+  "alpha": 0.05,
+  "b": 10000,
+  "before": [
+    12.0,
+    15.0,
+    14.0,
+    10.0,
+    13.0,
+    11.0,
+    16.0,
+    9.0,
+    14.0,
+    12.0
+  ],
+  "ci_high": 2.2,
+  "ci_low": 0.9,
+  "point": 1.6,
+  "seed": 777
+}
