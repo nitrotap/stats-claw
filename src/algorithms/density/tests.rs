@@ -100,7 +100,7 @@ fn density_integrates_to_one() -> Result<(), DensityError> {
     for i in 1..=steps {
         let x = step.mul_add(f64::from(u32::try_from(i).unwrap_or(0)), lo);
         let cur = kde.density_at(x);
-        area += 0.5 * (prev + cur) * step;
+        area = (0.5 * (prev + cur)).mul_add(step, area);
         prev = cur;
     }
     assert!((area - 1.0).abs() < 1e-4, "integral was {area}");

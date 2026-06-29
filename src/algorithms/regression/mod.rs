@@ -86,9 +86,9 @@ impl LinearModel {
         let mut ss_tot = 0.0_f64;
         for (row, &yi) in x.iter().zip(y) {
             let resid = yi - self.predict(row);
-            ss_res += resid * resid;
+            ss_res = resid.mul_add(resid, ss_res);
             let dev = yi - y_mean;
-            ss_tot += dev * dev;
+            ss_tot = dev.mul_add(dev, ss_tot);
         }
         if ss_tot <= 0.0 {
             return if ss_res <= 0.0 { 1.0 } else { 0.0 };

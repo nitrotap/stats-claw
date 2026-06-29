@@ -56,7 +56,7 @@ fn resampling_batch(c: &mut Criterion) {
         b.iter(|| {
             let mut rng = SplitMix64::new(0x00C0_FFEE);
             let stats = bootstrap_statistic(black_box(&data), B, &mut rng, median);
-            black_box(stats.map(|s| s.len()).unwrap_or(0))
+            black_box(stats.map_or(0, |s| s.len()))
         });
     });
     group.finish();

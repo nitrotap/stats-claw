@@ -90,7 +90,7 @@ fn hyperloglog_estimate_within_theoretical_error_bound() -> Result<(), HarnessEr
         let exact = common::field(case, "exact_distinct")?;
 
         let stream = lcg_stream(seed, mult, inc, modulus, length);
-        let hll = HyperLogLog::from_u64_iter(precision, stream.into_iter())
+        let hll = HyperLogLog::from_u64_iter(precision, stream)
             .map_err(|e| HarnessError::Parse(format!("HyperLogLog build failed: {e}")))?;
         let estimate = hll.estimate();
 
