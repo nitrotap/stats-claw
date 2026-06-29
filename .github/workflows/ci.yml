@@ -1,0 +1,93 @@
+name: CI
+
+# Quality gates: tests, lint (warnings as errors), formatting, docs, MSRV, and a
+# publishability check must pass on every push/PR to main. A scheduled job guards
+# the golden-fixture invariant against the pinned Python reference stack.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Daily fixture-drift check (03:17 UTC): flags divergence between the committed
+    # golden fixtures and a fresh regeneration from the pinned reference stack.
+    - cron: "17 3 * * *"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  gates:
+    name: test / clippy / fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format check
+        run: cargo fmt --all --check
+      - name: Clippy (warnings as errors)
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Tests
+        run: cargo test
+
+  docs:
+    name: docs (rustdoc, warnings as errors)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build docs (as docs.rs sees them)
+        run: cargo doc --no-deps
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
+  msrv:
+    name: MSRV 1.93 build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MSRV toolchain
+        uses: dtolnay/rust-toolchain@1.93.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Build on the declared MSRV
+        run: cargo build
+
+  publish-dryrun:
+    name: cargo publish --dry-run (zero runtime deps)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Assert zero runtime dependencies
+        run: |
+          deps="$(cargo tree --edges no-dev | tail -n +2)"
+          if [ -n "$deps" ]; then
+            echo "unexpected runtime dependencies:"; echo "$deps"; exit 1
+          fi
+          echo "stats-claw has zero runtime dependencies"
+      - name: Publish dry-run
+        run: cargo publish --dry-run
+
+  fixture-drift:
+    name: golden-fixture drift
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the pinned reference stack
+        run: python3 -m pip install -r reference/requirements.txt
+      - name: Regenerate golden fixtures
+        run: cd reference && python3 -m gen.run_all
+      - name: Fail if any golden fixture drifted
+        run: git diff --exit-code -- reference/golden
