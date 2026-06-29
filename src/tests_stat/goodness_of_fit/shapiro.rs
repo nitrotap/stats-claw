@@ -3,8 +3,8 @@
 use crate::distributions::NormalDistribution;
 use crate::distributions::{Cdf, Quantile};
 use crate::error::{Error, Result};
-use crate::tests_stat::parametric::{len_f64, mean};
 use crate::tests_stat::TestResult;
+use crate::tests_stat::parametric::{len_f64, mean};
 
 /// Shapiro–Wilk test for normality, matching `scipy.stats.shapiro`.
 ///

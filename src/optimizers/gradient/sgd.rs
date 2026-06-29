@@ -6,7 +6,7 @@
 //! coordinate-wise stochastic step), driven by [`SplitMix64`] so a fixed seed
 //! reproduces the run byte-for-byte.
 
-use crate::optimizers::{norm, ConvergenceStatus, Objective, OptimizeResult};
+use crate::optimizers::{ConvergenceStatus, Objective, OptimizeResult, norm};
 use crate::rng::SplitMix64;
 
 /// Minimizes `obj` by seeded stochastic coordinate gradient steps.

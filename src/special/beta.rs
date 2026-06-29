@@ -151,11 +151,7 @@ fn betacf(a: f64, b: f64, x: f64) -> f64 {
 
 /// Replaces a near-zero denominator with [`TINY`] to keep Lentz's method stable.
 fn lentz_guard(v: f64) -> f64 {
-    if v.abs() < TINY {
-        TINY
-    } else {
-        v
-    }
+    if v.abs() < TINY { TINY } else { v }
 }
 
 #[cfg(test)]

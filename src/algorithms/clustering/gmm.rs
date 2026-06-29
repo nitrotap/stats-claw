@@ -132,7 +132,7 @@ fn initialise(data: &[Vec<f64>], k: usize, dim: usize, seed: u64) -> Params {
         let members: Vec<&Vec<f64>> = data
             .iter()
             .zip(&assignment.labels)
-            .filter(|(_, &l)| l == cluster)
+            .filter(|&(_, &l)| l == cluster)
             .map(|(p, _)| p)
             .collect();
         let count = count_to_f64(members.len());

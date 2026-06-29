@@ -16,7 +16,7 @@
 
 use std::hint::black_box;
 
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use stats_claw::distributions::NormalDistribution;
 use stats_claw::optimizers::gradient::gradient_descent;
 use stats_claw::optimizers::objectives::Quadratic;

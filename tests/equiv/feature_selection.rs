@@ -10,7 +10,7 @@
 use crate::common;
 use crate::common::HarnessError;
 use stats_claw::algorithms::feature_selection::{
-    anova_f_pvalues, anova_f_scores, variance_threshold, FeatureSelectionError,
+    FeatureSelectionError, anova_f_pvalues, anova_f_scores, variance_threshold,
 };
 
 /// Tolerances for the equivalence comparisons.

@@ -2,10 +2,10 @@
 //! exact, `McNemar`, and Cochran's Q against scipy/statsmodels fixtures.
 
 use crate::common;
+use stats_claw::tests_stat::Alternative;
 use stats_claw::tests_stat::categorical::{
     chi_squared_independence, cochrans_q, cramers_v, fisher_exact, mcnemar,
 };
-use stats_claw::tests_stat::Alternative;
 
 #[test]
 fn chi2_independence_matches_scipy() -> Result<(), Box<dyn std::error::Error>> {

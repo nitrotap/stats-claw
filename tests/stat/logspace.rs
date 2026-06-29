@@ -10,7 +10,7 @@ use stats_claw::distributions::LogCdf;
 use stats_claw::distributions::{
     ChiSquaredDistribution, FDistribution, NormalDistribution, TDistribution,
 };
-use stats_claw::tests_stat::{parametric::t_test_1samp, Alternative};
+use stats_claw::tests_stat::{Alternative, parametric::t_test_1samp};
 
 /// A boxed test error, so helpers can `?` on both fixture and assertion failures.
 type TestError = Box<dyn std::error::Error>;

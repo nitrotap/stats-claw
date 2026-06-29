@@ -65,11 +65,7 @@ fn normalized_affinity(data: &[Vec<f64>], gamma: f64) -> Vec<f64> {
     let inv_sqrt_deg: Vec<f64> = (0..n)
         .map(|i| {
             let deg: f64 = (0..n).map(|j| at(&w, n, i, j)).sum();
-            if deg > 0.0 {
-                1.0 / deg.sqrt()
-            } else {
-                0.0
-            }
+            if deg > 0.0 { 1.0 / deg.sqrt() } else { 0.0 }
         })
         .collect();
     let mut normalized = vec![0.0_f64; n * n];

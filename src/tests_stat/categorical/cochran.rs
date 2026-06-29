@@ -2,7 +2,7 @@
 
 use crate::error::{Error, Result};
 use crate::tests_stat::parametric::len_f64;
-use crate::tests_stat::{chi_squared_upper_log_tail, chi_squared_upper_tail, TestResult};
+use crate::tests_stat::{TestResult, chi_squared_upper_log_tail, chi_squared_upper_tail};
 
 /// Cochran's Q test across `rows`, matching
 /// `statsmodels.stats.contingency_tables.cochrans_q`.

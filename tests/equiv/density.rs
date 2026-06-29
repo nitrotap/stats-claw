@@ -8,7 +8,7 @@
 
 use crate::common;
 use crate::common::HarnessError;
-use stats_claw::algorithms::density::{gaussian_kde, DensityError};
+use stats_claw::algorithms::density::{DensityError, gaussian_kde};
 
 /// Relative/absolute tolerance for the density equivalence comparisons.
 ///

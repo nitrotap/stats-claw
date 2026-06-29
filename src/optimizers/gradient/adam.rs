@@ -1,6 +1,6 @@
 //! Adam optimizer (Kingma & Ba 2014) — adaptive moment estimation.
 
-use crate::optimizers::{norm, ConvergenceStatus, Objective, OptimizeResult};
+use crate::optimizers::{ConvergenceStatus, Objective, OptimizeResult, norm};
 
 /// Default exponential-decay rate for the first moment (mean of gradients).
 const BETA1: f64 = 0.9;

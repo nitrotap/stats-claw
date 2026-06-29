@@ -18,7 +18,7 @@
 //! assert!(d.cdf(1_000.0) > 1.0 - 1e-9);
 //! ```
 
-use super::super::{bisection_quantile, count_to_f64, Cdf, LogCdf, Moments, Pdf, Quantile, Sample};
+use super::super::{Cdf, LogCdf, Moments, Pdf, Quantile, Sample, bisection_quantile, count_to_f64};
 use crate::distributions::FDistribution;
 use crate::rng::SplitMix64;
 use crate::special::{betai, ln_beta, ln_betai_lower, ln_betai_upper};

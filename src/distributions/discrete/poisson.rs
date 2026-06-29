@@ -19,7 +19,7 @@
 //! assert!(d.pmf(3) > 0.0, "pmf at mode was {}", d.pmf(3));
 //! ```
 
-use super::super::{count_to_f64, Cdf, Moments, Pmf, Quantile, Sample};
+use super::super::{Cdf, Moments, Pmf, Quantile, Sample, count_to_f64};
 use crate::distributions::PoissonDistribution;
 use crate::rng::SplitMix64;
 use crate::special::{gamma_q, ln_gamma};

@@ -97,11 +97,7 @@ fn erf(x: f64) -> f64 {
             + t * (-0.284_496_736
                 + t * (1.421_413_741 + t * (-1.453_152_027 + t * 1.061_405_429))));
     let y = 1.0 - poly * (-x * x).exp();
-    if x < 0.0 {
-        -y
-    } else {
-        y
-    }
+    if x < 0.0 { -y } else { y }
 }
 
 fn laplace() -> LaplaceDistribution {

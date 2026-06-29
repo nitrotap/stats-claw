@@ -3,7 +3,7 @@
 //! The stats-claw counterpart of `scipy.optimize.minimize(method="CG")`.
 
 use crate::optimizers::{
-    dot, line_search, norm, step, ConvergenceStatus, Objective, OptimizeResult,
+    ConvergenceStatus, Objective, OptimizeResult, dot, line_search, norm, step,
 };
 
 /// Minimizes `obj` by the Fletcher–Reeves nonlinear conjugate-gradient method.

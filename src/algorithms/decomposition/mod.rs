@@ -19,10 +19,10 @@ mod pca;
 mod tsne;
 mod umap;
 
-pub use factor_analysis::{factor_analysis, FactorResult};
-pub use ica::{fast_ica, IcaResult};
+pub use factor_analysis::{FactorResult, factor_analysis};
+pub use ica::{IcaResult, fast_ica};
 pub use lle::lle;
-pub use pca::{pca, PcaResult};
+pub use pca::{PcaResult, pca};
 pub use tsne::tsne;
 pub use umap::umap;
 

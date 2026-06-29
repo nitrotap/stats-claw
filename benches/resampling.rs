@@ -18,7 +18,7 @@
 
 use std::hint::black_box;
 
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use stats_claw::resampling::bootstrap_statistic;
 use stats_claw::rng::SplitMix64;
 

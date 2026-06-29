@@ -11,8 +11,8 @@ use crate::common;
 use crate::common::HarnessError;
 use serde_json::Value;
 use stats_claw::algorithms::clustering::{
-    affinity_propagation, agglomerative, cluster_count, dbscan, kmeans, mean_shift, spectral,
-    Linkage,
+    Linkage, affinity_propagation, agglomerative, cluster_count, dbscan, kmeans, mean_shift,
+    spectral,
 };
 
 /// Parses the `data` key of a fixture as a row-major point matrix.

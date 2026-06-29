@@ -17,10 +17,10 @@
 
 use std::hint::black_box;
 
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use stats_claw::rng::SplitMix64;
-use stats_claw::tests_stat::parametric::t_test_ind;
 use stats_claw::tests_stat::Alternative;
+use stats_claw::tests_stat::parametric::t_test_ind;
 
 /// Number of independent sample-pairs (tests) in the batch; matched by the
 /// Python baseline.

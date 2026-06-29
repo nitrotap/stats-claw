@@ -312,12 +312,14 @@ unsafe fn pdf_avx2(mean: f64, inv_sigma: f64, norm: f64, xs: &[f64], out: &mut [
     while i < body {
         // SAFETY: `i + 4 <= body <= n <= xs.len()`, so the 4-wide unaligned
         // load/store are in-bounds; `avx2`+`fma` guaranteed by the caller.
-        let vx = _mm256_loadu_pd(xs.as_ptr().add(i));
-        let z = _mm256_mul_pd(_mm256_sub_pd(vx, vmean), vinv);
-        let arg = _mm256_mul_pd(_mm256_mul_pd(z, z), vneg_half);
-        let e = exp_avx2(arg);
-        let res = _mm256_mul_pd(e, vnorm);
-        _mm256_storeu_pd(out.as_mut_ptr().add(i), res);
+        unsafe {
+            let vx = _mm256_loadu_pd(xs.as_ptr().add(i));
+            let z = _mm256_mul_pd(_mm256_sub_pd(vx, vmean), vinv);
+            let arg = _mm256_mul_pd(_mm256_mul_pd(z, z), vneg_half);
+            let e = exp_avx2(arg);
+            let res = _mm256_mul_pd(e, vnorm);
+            _mm256_storeu_pd(out.as_mut_ptr().add(i), res);
+        }
         i += lanes;
     }
 

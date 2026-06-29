@@ -18,7 +18,7 @@
 
 use std::hint::black_box;
 
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use stats_claw::optimizers::gradient::conjugate_gradient;
 use stats_claw::optimizers::objectives::Rosenbrock;
 

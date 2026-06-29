@@ -6,7 +6,7 @@
 use std::collections::VecDeque;
 
 use crate::optimizers::{
-    dot, line_search, norm, step, ConvergenceStatus, Objective, OptimizeResult,
+    ConvergenceStatus, Objective, OptimizeResult, dot, line_search, norm, step,
 };
 
 /// History length (number of `(s, y)` correction pairs) retained.
@@ -114,11 +114,7 @@ fn two_loop(
     let gamma = match (s_hist.back(), y_hist.back()) {
         (Some(s), Some(y)) => {
             let yy = dot(y, y);
-            if yy > 0.0 {
-                dot(s, y) / yy
-            } else {
-                1.0
-            }
+            if yy > 0.0 { dot(s, y) / yy } else { 1.0 }
         }
         _ => 1.0,
     };

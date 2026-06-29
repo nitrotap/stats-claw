@@ -5,7 +5,7 @@
 //! `cargo test` with access to the module's private items.
 
 use super::{
-    iqr_detect, modified_zscore_detect, zscore_detect, Detection, OutlierError, MAD_CONSISTENCY,
+    Detection, MAD_CONSISTENCY, OutlierError, iqr_detect, modified_zscore_detect, zscore_detect,
 };
 
 /// The flagged score in a [`Detection`], or `NaN` if absent (test-only reader).

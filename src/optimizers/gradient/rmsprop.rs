@@ -1,6 +1,6 @@
 //! `RMSProp` optimizer (Tieleman & Hinton 2012) — root-mean-square gradient scaling.
 
-use crate::optimizers::{norm, ConvergenceStatus, Objective, OptimizeResult};
+use crate::optimizers::{ConvergenceStatus, Objective, OptimizeResult, norm};
 
 /// Decay rate for the running mean of squared gradients.
 const DECAY: f64 = 0.9;

@@ -138,10 +138,10 @@ fn set(v: &mut [f64], i: usize, value: f64) {
 
 /// Writes `value` into `m[i][j]`, ignoring an out-of-range index.
 fn set_mat(m: &mut [Vec<f64>], i: usize, j: usize, value: f64) {
-    if let Some(row) = m.get_mut(i) {
-        if let Some(slot) = row.get_mut(j) {
-            *slot = value;
-        }
+    if let Some(row) = m.get_mut(i)
+        && let Some(slot) = row.get_mut(j)
+    {
+        *slot = value;
     }
 }
 

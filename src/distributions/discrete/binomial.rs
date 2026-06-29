@@ -17,7 +17,7 @@
 //! assert!(d.pmf(5) > d.pmf(3), "mode pmf should exceed flank");
 //! ```
 
-use super::super::{count_to_f64, Cdf, Moments, Pmf, Quantile, Sample};
+use super::super::{Cdf, Moments, Pmf, Quantile, Sample, count_to_f64};
 use crate::distributions::BinomialDistribution;
 use crate::rng::SplitMix64;
 use crate::special::{betai, ln_gamma};

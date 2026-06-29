@@ -4,7 +4,7 @@
 //! project's 500-line `style.rs` cap while the tests still compile under
 //! `cargo test` with access to the module's private items.
 
-use super::{gaussian_kde, DensityError};
+use super::{DensityError, gaussian_kde};
 
 /// A fitted KDE reproduces a hand-computed Gaussian-sum density at a query point.
 #[test]

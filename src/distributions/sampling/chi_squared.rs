@@ -19,7 +19,7 @@
 //! assert!(d.cdf(1_000.0) > 1.0 - 1e-9);
 //! ```
 
-use super::super::{bisection_quantile, count_to_f64, Cdf, LogCdf, Moments, Pdf, Quantile, Sample};
+use super::super::{Cdf, LogCdf, Moments, Pdf, Quantile, Sample, bisection_quantile, count_to_f64};
 use crate::distributions::ChiSquaredDistribution;
 use crate::rng::SplitMix64;
 use crate::special::{gamma_p, ln_gamma, ln_gamma_p, ln_gamma_q};

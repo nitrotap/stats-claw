@@ -3,7 +3,7 @@
 use crate::error::{Error, Result};
 use crate::tests_stat::parametric::len_f64;
 use crate::tests_stat::ranks::{mid_ranks, tie_correction};
-use crate::tests_stat::{chi_squared_upper_log_tail, chi_squared_upper_tail, TestResult};
+use crate::tests_stat::{TestResult, chi_squared_upper_log_tail, chi_squared_upper_tail};
 
 /// Kruskal–Wallis H test across `groups`, matching `scipy.stats.kruskal`.
 ///

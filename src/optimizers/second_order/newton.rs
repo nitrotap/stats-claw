@@ -3,7 +3,7 @@
 //! The stats-claw counterpart of `scipy.optimize.minimize(method="Newton-CG")`.
 
 use crate::optimizers::{
-    dot, line_search, matvec, norm, step, ConvergenceStatus, Objective, OptimizeResult,
+    ConvergenceStatus, Objective, OptimizeResult, dot, line_search, matvec, norm, step,
 };
 
 /// Minimizes `obj` by Newton's method, solving `H·p = −g` with inner CG.

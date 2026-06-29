@@ -116,11 +116,7 @@ pub fn erf(x: f64) -> f64 {
         return erf_small(x);
     }
     let c = erfc_ge_half(ax);
-    if x < 0.0 {
-        c - 1.0
-    } else {
-        1.0 - c
-    }
+    if x < 0.0 { c - 1.0 } else { 1.0 - c }
 }
 
 /// Computes the complementary error function `erfc(x) = 1 − erf(x)`.
@@ -150,11 +146,7 @@ pub fn erfc(x: f64) -> f64 {
         return 1.0 - erf_small(x);
     }
     let c = erfc_ge_half(ax);
-    if x < 0.0 {
-        2.0 - c
-    } else {
-        c
-    }
+    if x < 0.0 { 2.0 - c } else { c }
 }
 
 /// Computes the natural log of the complementary error function `ln(erfc(x))`.

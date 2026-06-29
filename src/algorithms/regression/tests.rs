@@ -4,7 +4,7 @@
 //! project's 500-line `style.rs` cap while the tests still compile under
 //! `cargo test` with access to the module's private items.
 
-use super::{ols, ridge, RegressionError};
+use super::{RegressionError, ols, ridge};
 
 /// OLS recovers the exact coefficients of a noise-free linear relationship.
 #[test]

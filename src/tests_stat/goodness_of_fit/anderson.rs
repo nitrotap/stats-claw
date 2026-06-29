@@ -3,8 +3,8 @@
 use crate::distributions::Cdf;
 use crate::distributions::NormalDistribution;
 use crate::error::{Error, Result};
-use crate::tests_stat::parametric::{len_f64, mean, variance};
 use crate::tests_stat::TestResult;
+use crate::tests_stat::parametric::{len_f64, mean, variance};
 
 /// Base critical values for the normal case (scipy's `_Avals_norm`), before the
 /// finite-sample adjustment.

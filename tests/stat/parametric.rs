@@ -2,10 +2,10 @@
 //! one-way ANOVA, and the Levene/Bartlett variance tests against scipy fixtures.
 
 use crate::common;
+use stats_claw::tests_stat::Alternative;
 use stats_claw::tests_stat::parametric::{
     bartlett, levene, one_way_anova, t_test_1samp, t_test_ind, t_test_paired, t_test_welch,
 };
-use stats_claw::tests_stat::Alternative;
 
 /// Extracts the `groups` field (array of numeric arrays) from a fixture.
 fn groups_of(fx: &serde_json::Value) -> Vec<Vec<f64>> {

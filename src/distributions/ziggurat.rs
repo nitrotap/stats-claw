@@ -347,11 +347,13 @@ unsafe fn sample_avx2(mean: f64, std_dev: f64, rng: &mut SplitMix64, out: &mut [
         }
         // SAFETY: `zs` is a 4-element stack array, so the 4-wide unaligned load
         // reads exactly its bounds; `avx2` is guaranteed by the caller.
-        let zv = _mm256_loadu_pd(zs.as_ptr());
+        let zv = unsafe { _mm256_loadu_pd(zs.as_ptr()) };
         let res = _mm256_fmadd_pd(vstd, zv, vmean);
         // SAFETY: `i + 4 <= body <= out.len()`, so the 4-wide unaligned store is
         // in-bounds; `avx2`+`fma` guaranteed by the caller.
-        _mm256_storeu_pd(out.as_mut_ptr().add(i), res);
+        unsafe {
+            _mm256_storeu_pd(out.as_mut_ptr().add(i), res);
+        }
         i += lanes;
     }
 

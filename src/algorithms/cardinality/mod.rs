@@ -224,10 +224,10 @@ impl HyperLogLog {
         // a defined rank of `64 - p + 1`.
         let tail = hash << p;
         let rank = leading_zero_rank(tail, p);
-        if let Some(slot) = self.registers.get_mut(index) {
-            if rank > *slot {
-                *slot = rank;
-            }
+        if let Some(slot) = self.registers.get_mut(index)
+            && rank > *slot
+        {
+            *slot = rank;
         }
     }
 

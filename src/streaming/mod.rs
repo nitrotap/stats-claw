@@ -47,9 +47,5 @@ pub(crate) fn count_to_f64(n: u64) -> f64 {
 /// `n` as an `f64`, sign preserved.
 pub(crate) fn position_as_f64(n: i64) -> f64 {
     let mag = f64::from(u32::try_from(n.unsigned_abs()).unwrap_or(u32::MAX));
-    if n < 0 {
-        -mag
-    } else {
-        mag
-    }
+    if n < 0 { -mag } else { mag }
 }

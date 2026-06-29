@@ -1,6 +1,6 @@
 //! `AdaGrad` optimizer (Duchi, Hazan & Singer 2011) — per-coordinate adaptive rates.
 
-use crate::optimizers::{norm, ConvergenceStatus, Objective, OptimizeResult};
+use crate::optimizers::{ConvergenceStatus, Objective, OptimizeResult, norm};
 
 /// Numerical-stability constant added to the denominator.
 const EPS: f64 = 1e-8;

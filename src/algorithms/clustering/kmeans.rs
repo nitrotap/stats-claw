@@ -189,7 +189,7 @@ fn recompute_centers(
         let members: Vec<&[f64]> = data
             .iter()
             .zip(labels)
-            .filter(|(_, &l)| l == cluster)
+            .filter(|&(_, &l)| l == cluster)
             .map(|(p, _)| p.as_slice())
             .collect();
         if !members.is_empty() {

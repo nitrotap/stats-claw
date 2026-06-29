@@ -17,7 +17,7 @@
 //! assert!((d.cdf(0.4) - 0.4).abs() < 1e-12);
 //! ```
 
-use super::super::{bisection_quantile, Cdf, Moments, Pdf, Quantile, Sample};
+use super::super::{Cdf, Moments, Pdf, Quantile, Sample, bisection_quantile};
 use super::gamma::marsaglia_tsang;
 use crate::distributions::BetaDistribution;
 use crate::rng::SplitMix64;

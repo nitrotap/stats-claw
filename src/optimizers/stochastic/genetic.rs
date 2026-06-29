@@ -68,8 +68,8 @@ pub fn genetic(
         .collect();
     let mut fitness: Vec<f64> = pop.iter().map(|c| obj.value(c)).collect();
     let mut iterations = 0;
-    for gen in 0..generations {
-        iterations = gen + 1;
+    for generation in 0..generations {
+        iterations = generation + 1;
         for i in 0..POP {
             let (a, b, c) = three_distinct(i, rng);
             let trial = mutate_crossover(&pop, i, a, b, c, dim, bounds, rng);

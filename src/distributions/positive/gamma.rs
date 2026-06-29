@@ -19,7 +19,7 @@
 //! assert!((exp.cdf(2.0) - (1.0 - (-1.0f64).exp())).abs() < 1e-10);
 //! ```
 
-use super::super::{bisection_quantile, Cdf, Moments, Pdf, Quantile, Sample};
+use super::super::{Cdf, Moments, Pdf, Quantile, Sample, bisection_quantile};
 use crate::distributions::GammaDistribution;
 use crate::rng::SplitMix64;
 use crate::special::{gamma_p, ln_gamma};

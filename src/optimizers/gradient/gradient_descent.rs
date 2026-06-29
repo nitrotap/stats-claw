@@ -1,7 +1,7 @@
 //! Vanilla (batch) gradient descent — the worked pattern every learning-rate
 //! optimizer follows.
 
-use crate::optimizers::{norm, ConvergenceStatus, Objective, OptimizeResult};
+use crate::optimizers::{ConvergenceStatus, Objective, OptimizeResult, norm};
 
 /// Minimizes `obj` by full-gradient steps of fixed learning rate.
 ///

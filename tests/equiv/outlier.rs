@@ -8,7 +8,7 @@
 
 use crate::common;
 use crate::common::HarnessError;
-use stats_claw::algorithms::outlier::{iqr_detect, zscore_detect, OutlierError};
+use stats_claw::algorithms::outlier::{OutlierError, iqr_detect, zscore_detect};
 
 /// Relative/absolute tolerance for the equivalence comparisons.
 ///

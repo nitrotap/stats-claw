@@ -2,7 +2,7 @@
 
 use super::{len_f64, mean, one_way_anova, variance};
 use crate::error::{Error, Result};
-use crate::tests_stat::{chi_squared_upper_log_tail, chi_squared_upper_tail, TestResult};
+use crate::tests_stat::{TestResult, chi_squared_upper_log_tail, chi_squared_upper_tail};
 
 /// Levene's test for equal variances using the mean-centered transform, matching
 /// `scipy.stats.levene(*groups, center="mean")`.

@@ -3,7 +3,7 @@
 use crate::error::{Error, Result};
 use crate::special::ln_gamma;
 use crate::tests_stat::parametric::floor_to_i64;
-use crate::tests_stat::{chi_squared_upper_log_tail, chi_squared_upper_tail, TestResult};
+use crate::tests_stat::{TestResult, chi_squared_upper_log_tail, chi_squared_upper_tail};
 
 /// The `McNemar` test on a 2×2 paired table, matching
 /// `statsmodels.stats.contingency_tables.mcnemar(table, exact, correction)`.

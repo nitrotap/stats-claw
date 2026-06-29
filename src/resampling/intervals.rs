@@ -139,10 +139,11 @@ pub fn coverage_rate(
     let mut covered = 0u32;
     for _ in 0..replications {
         let sample: Vec<f64> = (0..n).map(|_| dist.sample(rng)).collect();
-        if let Ok((lo, hi)) = percentile_ci(&sample, alpha) {
-            if lo <= mean && mean <= hi {
-                covered += 1;
-            }
+        if let Ok((lo, hi)) = percentile_ci(&sample, alpha)
+            && lo <= mean
+            && mean <= hi
+        {
+            covered += 1;
         }
     }
     let reps = u32::try_from(replications).unwrap_or(u32::MAX).max(1);

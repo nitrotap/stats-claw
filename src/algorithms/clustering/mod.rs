@@ -20,11 +20,11 @@ mod mean_shift;
 mod spectral;
 
 pub use affinity::affinity_propagation;
-pub use dbscan::{dbscan, DbscanResult};
-pub use gmm::{gmm_em, GmmResult};
-pub use hierarchical::{agglomerative, Linkage};
-pub use kmeans::{kmeans, KMeansResult};
-pub use mean_shift::{mean_shift, MeanShiftResult};
+pub use dbscan::{DbscanResult, dbscan};
+pub use gmm::{GmmResult, gmm_em};
+pub use hierarchical::{Linkage, agglomerative};
+pub use kmeans::{KMeansResult, kmeans};
+pub use mean_shift::{MeanShiftResult, mean_shift};
 pub use spectral::spectral;
 
 /// Label assigned to a point that belongs to no cluster (DBSCAN noise / outlier).

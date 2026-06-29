@@ -9,7 +9,7 @@
 use crate::common;
 use crate::common::HarnessError;
 use serde_json::Value;
-use stats_claw::algorithms::regression::{ols, ridge, RegressionError};
+use stats_claw::algorithms::regression::{RegressionError, ols, ridge};
 
 /// Relative/absolute tolerance for the regression equivalence comparisons.
 ///

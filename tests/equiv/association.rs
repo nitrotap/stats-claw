@@ -18,7 +18,7 @@
 use crate::common;
 use crate::common::HarnessError;
 use stats_claw::algorithms::association::{
-    apriori, association_rules, AssociationError, AssociationRule, FrequentItemset, RuleMetric,
+    AssociationError, AssociationRule, FrequentItemset, RuleMetric, apriori, association_rules,
 };
 
 /// Tolerance for the equivalence comparisons.
