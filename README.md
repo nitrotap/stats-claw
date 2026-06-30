@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/nitrotap/stats-claw">
-    <img src="https://raw.githubusercontent.com/nitrotap/stats-claw/main/assets/banner.png"
+    <img src="https://raw.githubusercontent.com/nitrotap/stats-claw/main/assets/banner.webp"
          alt="stats-claw — a Rust statistics tool" width="100%">
   </a>
 </p>
