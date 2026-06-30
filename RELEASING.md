@@ -8,7 +8,7 @@ whitelist in `Cargo.toml`), so it stays in the repository only.
 
 ```sh
 cargo test
-cargo clippy --all-targets -- -D warnings
+cargo clippy --all-targets   # manifest is authoritative: deny groups fail; pedantic/nursery only warn
 cargo fmt --check
 ```
 
