@@ -32,8 +32,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Format check
         run: cargo fmt --all --check
-      - name: Clippy (warnings as errors)
-        run: cargo clippy --all-targets -- -D warnings
+      - name: Clippy (manifest lint gate)
+        # No blanket `-D warnings`: the manifest's `deny` groups (clippy::all,
+        # clippy::cargo, plus curated restriction lints) still fail the build on
+        # real defects, while the unstable `pedantic`/`nursery` groups stay at
+        # `warn` so a new toolchain's added lints surface without breaking CI.
+        run: cargo clippy --all-targets
       - name: Tests
         run: cargo test
 

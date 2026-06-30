@@ -78,10 +78,16 @@ future_incompatible = { level = "deny", priority = -1 }
 nonstandard_style = { level = "deny", priority = -1 }
 
 [lints.clippy]
+# Stable, high-signal groups stay `deny`: real bug-catchers fail the build.
 all = { level = "deny", priority = -1 }
-pedantic = { level = "deny", priority = -1 }
-nursery = { level = "deny", priority = -1 }
 cargo = { level = "deny", priority = -1 }
+# `pedantic`/`nursery` are unstable groups — new clippy releases add lints to
+# them, so a routine toolchain bump can break a previously-green build even
+# though the code is unchanged. Hold them at `warn`: suggestions stay visible
+# but never block. (CI's clippy step drops `-D warnings` to honour this; the
+# `deny` groups above still hard-fail on real defects.)
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
 # The source repository is intentionally private, so the published crate omits
 # `package.repository` and points consumers at the hosted docs instead. Allow the
 # single cargo lint that would otherwise require a repository link; every other
