@@ -1,4 +1,5 @@
-//! Exponential distribution numerics, for the [`ExponentialDistribution`] parameter struct.
+//! Exponential distribution numerics, for the
+//! [`ExponentialDistribution`].
 //!
 //! Equivalent to `scipy.stats.expon(scale = 1 / rate_parameter)`: the waiting
 //! time of a Poisson process with rate `λ = rate_parameter`. Every function is

@@ -320,6 +320,49 @@ pub fn reconstruction_error(original: &[Vec<f64>], reconstructed: &[Vec<f64>]) -
     sum / count_to_f64(count)
 }
 
+/// Kani proof harness for the decomposition covariance kernel.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy.
+#[cfg(kani)]
+mod verification {
+    use super::covariance;
+
+    /// Magnitude bound on each centered entry: it keeps the squared products finite
+    /// so the accumulation cannot diverge into `∞`/`NaN`, isolating the panic-,
+    /// overflow-, and index-safety argument for the row-major `i·dim + j` addressing.
+    const MAX_ABS: f64 = 1e3;
+
+    /// Proves [`covariance`] never panics, overflows, or indexes out of bounds and
+    /// produces a finite `dim×dim` buffer for a symbolic two-sample, two-feature
+    /// centered matrix with bounded finite entries.
+    ///
+    /// This exercises the row-major `i·dim + j` write index against a `dim·dim`
+    /// buffer (proving every `cov.get_mut` addresses a real slot) and the `n − 1`
+    /// denominator guard, over the whole bounded input box. The `#[kani::unwind(5)]`
+    /// unrolls the fixed `0..dim` (`dim = 2`) inner loops, the two-row outer loop, and
+    /// the harness's own four-element bounding loop.
+    #[kani::proof]
+    #[kani::unwind(5)]
+    fn decomp_covariance_total() {
+        let a: f64 = kani::any();
+        let b: f64 = kani::any();
+        let c: f64 = kani::any();
+        let d: f64 = kani::any();
+        for v in [a, b, c, d] {
+            kani::assume(v.is_finite());
+            kani::assume(v.abs() <= MAX_ABS);
+        }
+        let centered = vec![vec![a, b], vec![c, d]];
+        let cov = covariance(&centered, 2);
+        assert!(cov.len() == 4, "covariance buffer was not dim*dim");
+        assert!(
+            cov.iter().all(|c| c.is_finite()),
+            "covariance produced a non-finite entry"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

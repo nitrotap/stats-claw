@@ -1,5 +1,5 @@
 //! Laplace (double-exponential) distribution numerics, for the
-//! [`LaplaceDistribution`] parameter struct.
+//! [`LaplaceDistribution`].
 //!
 //! Equivalent to `scipy.stats.laplace(loc=location, scale=scale)`: a symmetric
 //! exponential decay about `location` with rate `1/scale`. The CDF and quantile

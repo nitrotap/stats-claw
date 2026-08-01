@@ -90,6 +90,32 @@ pub fn cochrans_q(rows: &[&[f64]]) -> Result<TestResult> {
     })
 }
 
+/// Kani formal-verification harness for Cochran's Q input-validation layer.
+///
+/// Compiled only under `cargo kani`. A single subject trips the leading `n < 2`
+/// guard, so [`cochrans_q`] returns `Err` before the Q-statistic and chi-squared
+/// tail interior; the symbolic responses are never inspected.
+#[cfg(kani)]
+mod verification {
+    use super::cochrans_q;
+    use crate::error::Error;
+
+    /// Proves Cochran's Q rejects a design with fewer than two subjects via `Err`
+    /// without panicking, for arbitrary symbolic responses.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn cochrans_q_rejects_insufficient_subjects() {
+        let r0: [f64; 2] = [kani::any(), kani::any()];
+        let rows: [&[f64]; 1] = [&r0];
+        assert!(
+            matches!(cochrans_q(&rows), Err(Error::InsufficientData)),
+            "single-subject design must reject with InsufficientData"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

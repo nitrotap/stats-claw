@@ -1,4 +1,5 @@
-//! Continuous uniform distribution numerics, for the [`UniformDistribution`] parameter struct.
+//! Continuous uniform distribution numerics, for the
+//! [`UniformDistribution`].
 //!
 //! Equivalent to `scipy.stats.uniform(loc=lower_bound, scale=upper_bound −
 //! lower_bound)`: constant density on `[lower_bound, upper_bound]`, zero outside.

@@ -90,6 +90,20 @@ pub(super) fn tie_correction(values: &[f64]) -> f64 {
     total
 }
 
+// Kani note: the shared rank helpers ([`mid_ranks`], [`tie_correction`]) are NOT
+// Kani-verified, deliberately. Both build an internal `Vec` — `mid_ranks` via
+// `order: Vec<usize> = (0..n).collect()` and `tie_correction` via
+// `values.to_vec()` — and then drive their inner loops off a Vec-derived length
+// (`order.get(i..j)` at line 49, `sorted.len()` at line 74). CBMC does not
+// propagate the concrete length through `collect()` / `to_vec()` + `sort_by`, so
+// it treats those loops as unbounded and unwinds them without limit (observed past
+// 400–1100 iterations) until it exhausts memory. A `#[kani::unwind]` cap would not
+// help: on an apparently-unbounded loop it trips an unwinding assertion instead of
+// closing the proof. These helpers are transcendental-free and small, and their
+// behaviour (including panic-freedom on ties and distinct values) is pinned by the
+// `#[cfg(test)]` fixtures below; the Kani effort is spent instead on the
+// validation-rejection surfaces of the statistical tests that call them.
+
 #[cfg(test)]
 mod tests {
     use super::*;

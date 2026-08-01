@@ -154,6 +154,35 @@ fn log_choose(n: f64, k: f64) -> f64 {
     ln_gamma(n + 1.0) - ln_gamma(k + 1.0) - ln_gamma(n - k + 1.0)
 }
 
+/// Kani formal-verification harness for Fisher's exact table-validation layer.
+///
+/// Compiled only under `cargo kani`. A one-row table trips the `table.len() != 2`
+/// guard in the private `cells` extractor, so [`fisher_exact`] returns `Err` before
+/// the hypergeometric enumeration; the symbolic cell values are never inspected.
+#[cfg(kani)]
+mod verification {
+    use super::fisher_exact;
+    use crate::error::Error;
+    use crate::tests_stat::Alternative;
+
+    /// Proves Fisher's exact test rejects a non-2×2 table via `Err` without
+    /// panicking, for arbitrary symbolic counts.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn fisher_rejects_non_2x2() {
+        let table: [Vec<f64>; 1] = [vec![kani::any::<f64>(), kani::any::<f64>()]];
+        assert!(
+            matches!(
+                fisher_exact(&table, Alternative::TwoSided),
+                Err(Error::InvalidInput(_))
+            ),
+            "non-2x2 table must reject with InvalidInput"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

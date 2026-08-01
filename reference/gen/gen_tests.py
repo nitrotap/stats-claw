@@ -465,7 +465,7 @@ def gen_cramers_boot():
 
 
 def gen_boot_delta():
-    """Paired-delta bootstrap CI with stats-claw's RNG (QA-CAT-095)."""
+    """Paired-delta bootstrap CI with stats-claw's RNG."""
     before = [12.0, 15.0, 14.0, 10.0, 13.0, 11.0, 16.0, 9.0, 14.0, 12.0]
     after = [14.0, 16.0, 13.0, 12.0, 15.0, 14.0, 18.0, 11.0, 15.0, 14.0]
     delta = np.array(after) - np.array(before)
@@ -571,7 +571,7 @@ def gen_extreme_p():
 
 
 def gen_beta_credible():
-    """Beta(a0+k, b0+n-k) credible interval via scipy.stats.beta.ppf (QA-CAT-066)."""
+    """Beta(a0+k, b0+n-k) credible interval via scipy.stats.beta.ppf."""
     a0, b0, k, n = 1.0, 1.0, 7, 10
     a, bb = a0 + k, b0 + (n - k)
     lo = float(stats.beta.ppf(0.025, a, bb))

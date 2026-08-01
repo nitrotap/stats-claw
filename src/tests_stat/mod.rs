@@ -4,8 +4,9 @@
 //! [`Alternative`]) and houses the categorical, parametric, nonparametric,
 //! goodness-of-fit, and correlation test families in subgroup folders. Each test
 //! computes its statistic and p-value against the framework distributions
-//! ([`crate::distributions`]) to tight tolerances: statistic relative
-//! error ≤ 1e-8, p-value absolute error ≤ 1e-8 (asymptotic ≤ 1e-6). Equivalence
+//! ([`crate::distributions`]) within the tolerances this crate commits to:
+//! statistic relative error ≤ 1e-8, p-value absolute error ≤ 1e-8
+//! (asymptotic ≤ 1e-6). Equivalence
 //! is proven by the `tests/equiv.rs` suite (per-family modules under
 //! `tests/stat/`) against committed scipy/statsmodels golden fixtures.
 

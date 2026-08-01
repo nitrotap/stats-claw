@@ -1,4 +1,4 @@
-//! Beta distribution numerics, for the [`BetaDistribution`] parameter struct.
+//! Beta distribution numerics, for the [`BetaDistribution`].
 //!
 //! Equivalent to `scipy.stats.beta(alpha_parameter, beta_parameter)` on the
 //! support `[0, 1]`. The density uses `ln_beta` for stability, the CDF is the

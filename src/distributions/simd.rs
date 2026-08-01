@@ -11,11 +11,11 @@
 //! * any other target, or a CPU lacking the feature — the scalar fallback
 //!   (`f64::exp` for the pdf; the Cody-`erf` path for the cdf).
 //!
-//! Only the `pdf` `exp` loop is genuinely SIMD-friendly and is the path that
-//! benefits most; the `cdf` keeps the branchy scalar Cody `erf` in the lane loop
-//! (vectorizing `erf` to ≤1e-10 is not worth the accuracy risk) but still
-//! benefits from the dense batch layout. Sampling is left scalar (a cached
-//! Box–Muller generator cannot match numpy's vectorized ziggurat).
+//! Only the `pdf` `exp` loop is genuinely SIMD-friendly and is the gated metric;
+//! the `cdf` keeps the branchy scalar Cody `erf` in the lane loop (vectorizing
+//! `erf` to ≤1e-10 is not worth the accuracy risk) but still benefits from the
+//! dense batch layout. Sampling is left scalar (a cached Box–Muller generator
+//! cannot match numpy's vectorized ziggurat; see the results record).
 //!
 //! ## Accuracy
 //!
@@ -80,9 +80,8 @@ const EXP_SHIFT: i32 = 52;
 /// This is the correctness fallback used when no SIMD feature is available and
 /// the per-lane correctness oracle the kernel tests compare against. It delegates
 /// to the standard-library `f64::exp` rather than re-deriving the Cephes
-/// reduction in scalar code: the scalar path is **not** the performance-critical
-/// hot loop (the NEON/AVX2 kernels carry the batch workload), so its only job is
-/// to be exactly
+/// reduction in scalar code: the scalar path is **not** the gated hot loop (the
+/// perf metric runs the NEON/AVX2 kernels), so its only job is to be exactly
 /// correct and `as`-free. The SIMD lanes implement the vectorized Cephes `exp`
 /// ([`EXP_TAYLOR`]) directly and are validated against this oracle to ≤ 1e-12 by
 /// the kernel tests.
@@ -157,7 +156,7 @@ fn pdf_scalar(mean: f64, inv_sigma: f64, norm: f64, xs: &[f64], out: &mut [f64])
 ///
 /// The `erf` evaluation stays scalar (Cody rational, kept for its ≤1e-16 tail
 /// accuracy), so this is a batch-layout convenience rather than a vectorized
-/// kernel; the vectorized hot path is `pdf`, not `cdf`.
+/// kernel; the gated metric is `pdf`, not `cdf`.
 ///
 /// # Arguments
 ///
@@ -209,12 +208,14 @@ unsafe fn pdf_neon(mean: f64, inv_sigma: f64, norm: f64, xs: &[f64], out: &mut [
     while i < body {
         // SAFETY: `i + 2 <= body <= n <= xs.len()`, so the 2-wide load/store are
         // in-bounds; `neon` is guaranteed by the caller's contract.
-        let vx = vld1q_f64(xs.as_ptr().add(i));
-        let z = vmulq_f64(vsubq_f64(vx, vmean), vinv);
-        let arg = vmulq_f64(vmulq_f64(z, z), vneg_half);
-        let e = exp_neon(arg);
-        let res = vmulq_f64(e, vnorm);
-        vst1q_f64(out.as_mut_ptr().add(i), res);
+        unsafe {
+            let vx = vld1q_f64(xs.as_ptr().add(i));
+            let z = vmulq_f64(vsubq_f64(vx, vmean), vinv);
+            let arg = vmulq_f64(vmulq_f64(z, z), vneg_half);
+            let e = exp_neon(arg);
+            let res = vmulq_f64(e, vnorm);
+            vst1q_f64(out.as_mut_ptr().add(i), res);
+        }
         i += lanes;
     }
 

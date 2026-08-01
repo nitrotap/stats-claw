@@ -132,6 +132,35 @@ fn log_choose(n: i64, k: i64) -> f64 {
     ln_gamma(nf + 1.0) - ln_gamma(kf + 1.0) - ln_gamma(nf - kf + 1.0)
 }
 
+/// Kani formal-verification harness for McNemar's table-validation layer.
+///
+/// Compiled only under `cargo kani`. A one-row table trips the `table.len() != 2`
+/// guard in the private `discordant` extractor, so [`mcnemar`] returns `Err` before
+/// the chi-squared / exact-binomial interior; the symbolic cell values are never
+/// inspected.
+#[cfg(kani)]
+mod verification {
+    use super::mcnemar;
+    use crate::error::Error;
+
+    /// Proves McNemar's test rejects a non-2×2 table via `Err` without panicking,
+    /// for arbitrary symbolic counts (asymptotic path selected).
+    ///
+    /// The live path returns `Err` at `discordant(table)?` having executed no loop;
+    /// the small [`kani::unwind`] bound caps the dead chi-squared-tail branch (whose
+    /// `gamma_p_series` runs up to 1000 iterations) that CBMC would otherwise unwind
+    /// during model construction and run out of memory on.
+    #[kani::proof]
+    #[kani::unwind(2)]
+    fn mcnemar_rejects_non_2x2() {
+        let table: [Vec<f64>; 1] = [vec![kani::any::<f64>(), kani::any::<f64>()]];
+        assert!(
+            matches!(mcnemar(&table, false, false), Err(Error::InvalidInput(_))),
+            "non-2x2 table must reject with InvalidInput"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

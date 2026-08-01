@@ -12,6 +12,19 @@ cargo clippy --all-targets   # manifest is authoritative: deny groups fail; peda
 cargo fmt --check
 ```
 
+The two verification layers (see `VERIFICATION.md`) are release gates rather than
+per-change gates:
+
+```sh
+cargo kani -Z stubbing       # 68 proof harnesses; also runs in CI on the `v*` tag
+cargo +nightly miri test --lib -- distributions:: streaming:: \
+  --skip batch_pdf_matches --skip scalar_ziggurat_fits_standard_normal
+```
+
+Kani needs `cargo install --locked kani-verifier && cargo kani setup` once. On
+Apple Silicon with an x86_64 default toolchain, prefix the Kani command with
+`RUSTUP_TOOLCHAIN=stable-aarch64-apple-darwin`.
+
 ## 2. Verify the package without uploading
 
 ```sh

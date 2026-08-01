@@ -486,6 +486,14 @@ fn top_k_mask(scores: &[f64], k: usize) -> Vec<bool> {
     mask
 }
 
+/// Kani proof harnesses (validation + top-`k`), in the sibling `verification.rs` so
+/// this file stays within the 500-line `tests/style.rs` cap; `include!` splices them
+/// in and `super` there refers to this module. Compiled only under `cargo kani`.
+#[cfg(kani)]
+mod verification {
+    include!("verification.rs");
+}
+
 #[cfg(test)]
 #[path = "tests.rs"]
 mod tests;

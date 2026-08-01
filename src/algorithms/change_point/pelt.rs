@@ -184,6 +184,65 @@ fn backtrack(last_change: &[usize], n: usize) -> Vec<usize> {
     breakpoints
 }
 
+// Kani coverage note: the full `pelt_l2` entry point is deliberately NOT model
+// checked. Its dynamic-programming body combines a nested `1..=n` / candidate loop,
+// a `Vec::retain` prune step, and a `backtrack` reverse; even at `n = 2` this
+// generates a SAT instance (>11 000 VCCs) that does not close within the ~3-minute
+// per-harness budget and was OOM-killed on the shared runner. `pelt_l2`'s numerical
+// correctness stays pinned by the `ruptures` equivalence suite and the unit tests
+// below. Instead, the transcendental-free arithmetic *kernel* the DP repeatedly
+// evaluates — `segment_cost` — is proved panic-free below, which is where the only
+// division and the fixed-index slice reads live.
+
+/// Kani proof harness for the PELT L2 segment-cost kernel.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy.
+#[cfg(kani)]
+mod verification {
+    use super::segment_cost;
+
+    /// Magnitude bound on each prefix-sum entry: it keeps the cost arithmetic finite
+    /// so a run cannot diverge into `∞`/`NaN`, isolating the panic-, overflow-, and
+    /// index-safety argument for the guarded division and the fixed slice reads.
+    const MAX_ABS: f64 = 1e6;
+
+    /// Proves [`segment_cost`] — the O(1) least-squares cost the PELT dynamic program
+    /// evaluates for every candidate segment — never panics, overflows, or indexes
+    /// out of bounds for symbolic bounded prefix/prefix-square arrays and symbolic
+    /// `start`/`end` indices.
+    ///
+    /// This is where PELT's only division (`(sum·sum) / len`) and its fixed-index
+    /// prefix reads live; the `len ≤ 0` guard and the `.get(..).unwrap_or(0.0)` reads
+    /// mean the cost is well-defined for *any* index pair in range, which the harness
+    /// discharges symbolically. `start ≤ end` mirrors the caller's invariant (PELT
+    /// only ever costs a forward segment, so `end − start` never underflows); indices
+    /// are bounded so the widened `len` stays exact. The `#[kani::unwind(7)]` covers
+    /// the harness's own bounding loop over the six symbolic prefix entries.
+    #[kani::proof]
+    #[kani::unwind(7)]
+    fn pelt_segment_cost_total() {
+        let p0: f64 = kani::any();
+        let p1: f64 = kani::any();
+        let p2: f64 = kani::any();
+        let q0: f64 = kani::any();
+        let q1: f64 = kani::any();
+        let q2: f64 = kani::any();
+        for v in [p0, p1, p2, q0, q1, q2] {
+            kani::assume(v.is_finite());
+            kani::assume(v.abs() <= MAX_ABS);
+        }
+        let prefix = [p0, p1, p2];
+        let prefix_sq = [q0, q1, q2];
+        let start: usize = kani::any();
+        let end: usize = kani::any();
+        kani::assume(start <= end);
+        kani::assume(end <= 3);
+        let cost = segment_cost(&prefix, &prefix_sq, start, end);
+        assert!(cost.is_finite(), "segment_cost produced a non-finite value");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

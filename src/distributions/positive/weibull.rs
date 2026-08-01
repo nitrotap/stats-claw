@@ -1,4 +1,5 @@
-//! Weibull distribution numerics, for the [`WeibullDistribution`] parameter struct.
+//! Weibull distribution numerics, for the
+//! [`WeibullDistribution`].
 //!
 //! Equivalent to `scipy.stats.weibull_min(c = shape_parameter, scale =
 //! scale_parameter)`. The density, CDF, and quantile are closed forms; the

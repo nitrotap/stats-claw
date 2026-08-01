@@ -80,6 +80,32 @@ pub fn kruskal_wallis(groups: &[&[f64]]) -> Result<TestResult> {
     })
 }
 
+/// Kani formal-verification harness for the Kruskal–Wallis input-validation layer.
+///
+/// Compiled only under `cargo kani`. A single group trips the leading `k < 2` guard,
+/// so [`kruskal_wallis`] returns `Err` before the pooled-rank and chi-squared tail
+/// interior; the symbolic value is never inspected.
+#[cfg(kani)]
+mod verification {
+    use super::kruskal_wallis;
+    use crate::error::Error;
+
+    /// Proves the Kruskal–Wallis test rejects a design with fewer than two groups
+    /// via `Err` without panicking, for an arbitrary symbolic observation.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn kruskal_wallis_rejects_insufficient_groups() {
+        let g0: [f64; 1] = [kani::any()];
+        let groups: [&[f64]; 1] = [&g0];
+        assert!(
+            matches!(kruskal_wallis(&groups), Err(Error::InsufficientData)),
+            "single-group design must reject with InsufficientData"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

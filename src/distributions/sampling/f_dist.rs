@@ -1,4 +1,4 @@
-//! F-distribution numerics, for the [`FDistribution`] parameter struct.
+//! F-distribution numerics, for the [`FDistribution`].
 //!
 //! Equivalent to `scipy.stats.f(numerator_df, denominator_df)`. The density uses
 //! `ln_beta`, the CDF is the regularized incomplete beta `betai`, the quantile

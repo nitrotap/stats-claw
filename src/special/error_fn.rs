@@ -354,6 +354,14 @@ fn trunc_16(ax: f64) -> f64 {
     (ax * 16.0).floor() / 16.0
 }
 
+// Tier-2 Kani note (no harness): a proof of `erf(x) ∈ [-1, 1]` for symbolic finite
+// `x` was attempted and dropped. Kani models the `exp` calls in `erfc_ge_half` /
+// the asymptotic tail with a sound over-approximation that does not encode their
+// true range, so (a) the range bound fails spuriously, and (b) even the reduced
+// panic-freedom form runs past the ~3-minute tier-2 solver budget (> 4.5 min
+// observed before being killed). `erf`'s range and accuracy are covered by the
+// golden-fixture unit tests below instead.
+
 #[cfg(test)]
 mod tests {
     use super::*;

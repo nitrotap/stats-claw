@@ -257,13 +257,13 @@ pub fn ridge(x: &[Vec<f64>], y: &[f64], lambda: f64) -> Result<LinearModel, Regr
         for j in 0..n_cols {
             let xj = centered(row, &col_means, j);
             if let Some(bj) = b.get_mut(j) {
-                *bj += xj * yc;
+                *bj = xj.mul_add(yc, *bj);
             }
             if let Some(a_row) = a.get_mut(j) {
                 for k in 0..n_cols {
                     let xk = centered(row, &col_means, k);
                     if let Some(a_jk) = a_row.get_mut(k) {
-                        *a_jk += xj * xk;
+                        *a_jk = xj.mul_add(xk, *a_jk);
                     }
                 }
             }

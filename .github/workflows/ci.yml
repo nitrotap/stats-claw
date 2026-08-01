@@ -1,9 +1,10 @@
 name: CI
 
 # Quality gates: tests, lint (warnings as errors), formatting, docs, MSRV, and a
-# publishability check must pass on every push/PR to main. A scheduled job guards
-# the golden-fixture invariant against the pinned Python reference stack. Pushing a
-# `v*` tag re-runs every gate and then publishes the crate to crates.io.
+# publishability check must pass on every push/PR to main. Scheduled jobs guard the
+# golden-fixture invariant against the pinned Python reference stack and re-run the
+# Kani proof harnesses. Pushing a `v*` tag re-runs every gate — proofs included —
+# and then publishes the crate to crates.io.
 
 on:
   push:
@@ -15,6 +16,9 @@ on:
     # Daily fixture-drift check (03:17 UTC): flags divergence between the committed
     # golden fixtures and a fresh regeneration from the pinned reference stack.
     - cron: "17 3 * * *"
+  # Manual trigger, so the Kani job can be run on demand against a branch without
+  # waiting for the nightly schedule or cutting a tag.
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -81,6 +85,34 @@ jobs:
       - name: Publish dry-run
         run: cargo publish --dry-run
 
+  kani:
+    name: Kani proof harnesses
+    # Deliberately NOT on every push/PR: the full harness suite is a model-checking
+    # run measured in tens of minutes, not the seconds the other gates take. It runs
+    # nightly, on demand, and — because the proofs are part of what a release
+    # claims — on every `v*` tag, where `publish` waits on it.
+    if: >-
+      github.event_name == 'schedule'
+      || github.event_name == 'workflow_dispatch'
+      || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Kani
+        # `cargo kani setup` fetches the CBMC bundle and the pinned nightly the
+        # verifier builds harnesses with. Kani is a dev/CI tool only — it is never
+        # a dependency of the crate, so the zero-runtime-dependency guarantee holds.
+        run: |
+          cargo install --locked kani-verifier
+          cargo kani setup
+      - name: Verify all proof harnesses
+        # `-Z stubbing` is required: the `ln_choose` proof is modular and stubs
+        # `ln_gamma`, which CBMC cannot model directly.
+        run: cargo kani -Z stubbing
+
   fixture-drift:
     name: golden-fixture drift
     if: github.event_name == 'schedule'
@@ -100,11 +132,12 @@ jobs:
 
   publish:
     name: publish to crates.io
-    # Only on a pushed `v*` tag, and only after every gate is green. The crates.io
-    # token is supplied via the CRATE_API repository secret, passed through env
-    # (never interpolated into a run: command).
+    # Only on a pushed `v*` tag, and only after every gate — including the Kani
+    # proof suite, which also runs on tags — is green. The crates.io token is
+    # supplied via the CRATE_API repository secret, passed through env (never
+    # interpolated into a run: command).
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [gates, docs, msrv, publish-dryrun]
+    needs: [gates, docs, msrv, publish-dryrun, kani]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

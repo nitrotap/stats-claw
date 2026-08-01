@@ -256,6 +256,43 @@ pub fn ks_two_sample_mode(first: &[f64], second: &[f64], mode: Mode) -> Result<T
     Ok(TestResult { p_value, ..base })
 }
 
+/// Kani formal-verification harness for the Kolmogorov–Smirnov input-validation
+/// layer.
+///
+/// Compiled only under `cargo kani`. An empty sample trips the leading
+/// emptiness guard in both [`ks_one_sample`] and [`ks_two_sample`], so each returns
+/// `Err` before the empirical-CDF and Kolmogorov-tail interior; the symbolic
+/// arguments are never inspected. Feeding an empty sample also side-steps the
+/// symbolic `std_dev <= 0` branch, keeping the proof clear of the transcendental
+/// interior entirely.
+#[cfg(kani)]
+mod verification {
+    use super::{ks_one_sample, ks_two_sample};
+    use crate::error::Error;
+
+    /// Proves both KS entry points reject an empty sample via `Err` without
+    /// panicking, for arbitrary symbolic parameters.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn ks_rejects_empty_sample() {
+        let empty: [f64; 0] = [];
+        assert!(
+            matches!(
+                ks_one_sample(&empty, kani::any(), kani::any()),
+                Err(Error::EmptyInput)
+            ),
+            "one-sample KS with an empty sample must reject with EmptyInput"
+        );
+        let other: [f64; 1] = [kani::any()];
+        assert!(
+            matches!(ks_two_sample(&empty, &other), Err(Error::EmptyInput)),
+            "two-sample KS with an empty sample must reject with EmptyInput"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

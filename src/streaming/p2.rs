@@ -4,7 +4,7 @@
 // compile-time constant or a loop bound in `0..5` / `1..4` indexing the
 // fixed-length `[_; 5]` marker arrays, so the access is provably in bounds.
 // Rewriting each as `.get(..).unwrap_or(..)` would obscure the dense P²
-// arithmetic and add unreachable fallbacks, so a scoped allow is the clearer
+// arithmetic and add unreachable fallbacks, so a scoped allow is the honest
 // choice here (no `unwrap`/`as`/`unsafe` is introduced).
 #![allow(clippy::indexing_slicing)]
 
@@ -195,5 +195,81 @@ impl P2Quantile {
         let pos_i = position_as_f64(self.positions[i]);
         let pos_neighbor = position_as_f64(self.positions[neighbor]);
         self.heights[i] + dir * (self.heights[neighbor] - self.heights[i]) / (pos_neighbor - pos_i)
+    }
+}
+
+/// Kani formal-verification harnesses for the P² estimator.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy. As a child of the `p2` module the harnesses can read the
+/// private `positions` array to check the algorithm's structural invariant
+/// directly. This is what formally discharges the module-level scoped
+/// `allow(clippy::indexing_slicing)`: every fixed-index access is proven in bounds
+/// because the five-marker positions stay strictly ascending over all inputs.
+#[cfg(kani)]
+mod verification {
+    use super::P2Quantile;
+
+    /// Number of updates folded in. Five bootstrap the markers; the remainder
+    /// drive the post-bootstrap P² path (parabolic/linear adjustment) so the proof
+    /// covers the branch the scoped `indexing_slicing` allow lives on.
+    const UPDATES: usize = 7;
+
+    /// Magnitude bound on each observation, mirroring the moments proof: it keeps
+    /// the parabolic/linear `f64` arithmetic finite so the run cannot diverge into
+    /// `∞`/`NaN` control flow, isolating the integer-position invariant.
+    const MAX_ABS: f64 = 1e6;
+
+    /// Draws a symbolic observation constrained to be finite and bounded.
+    ///
+    /// # Returns
+    ///
+    /// A finite `f64` with `|x| ≤ MAX_ABS`.
+    fn any_obs() -> f64 {
+        let x: f64 = kani::any();
+        kani::assume(x.is_finite());
+        kani::assume(x.abs() <= MAX_ABS);
+        x
+    }
+
+    /// Asserts the five marker positions are strictly ascending.
+    ///
+    /// # Arguments
+    ///
+    /// * `q` — the estimator whose `positions` array is checked.
+    fn assert_positions_ascending(q: &P2Quantile) {
+        for i in 0..4 {
+            assert!(
+                q.positions[i] < q.positions[i + 1],
+                "positions not strictly increasing at marker {i}"
+            );
+        }
+    }
+
+    /// Proves that for a symbolic quantile `p ∈ [0, 1]` and any sequence of seven
+    /// symbolic bounded observations, [`P2Quantile::update`] never panics or
+    /// overflows and the integer `positions` array stays strictly increasing after
+    /// every update — including through the post-bootstrap parabolic/linear path.
+    ///
+    /// Strictly-increasing positions are the precondition that makes every
+    /// fixed-index `positions`/`heights` access in this module provably in bounds,
+    /// so this harness is the formal discharge of the scoped
+    /// `allow(clippy::indexing_slicing)`.
+    ///
+    /// The `#[kani::unwind(8)]` bound fully unrolls the estimator's internal
+    /// fixed-length loops (all `0..5` / `1..4` / `0..4`) and the seven-step update
+    /// loop; no loop is input-length dependent.
+    #[kani::proof]
+    #[kani::unwind(8)]
+    fn p2_positions_strictly_increasing() {
+        let p: f64 = kani::any();
+        kani::assume(p >= 0.0);
+        kani::assume(p <= 1.0);
+        let mut q = P2Quantile::new(p);
+        assert_positions_ascending(&q);
+        for _ in 0..UPDATES {
+            q.update(any_obs());
+            assert_positions_ascending(&q);
+        }
     }
 }

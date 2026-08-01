@@ -163,7 +163,7 @@ impl AssociationRule {
     }
 }
 
-/// The metric `association_rules` filters generated rules by.
+/// The metric `association_rules` filters candidate rules by.
 ///
 /// Mirrors mlxtend's `metric` argument: a rule is emitted only when the chosen
 /// metric is `≥ min_threshold`.
@@ -412,6 +412,36 @@ fn sort_itemsets(itemsets: &mut [FrequentItemset]) {
             .cmp(&b.items.len())
             .then(a.items.cmp(&b.items))
     });
+}
+
+/// Kani proof harness for the transaction-matrix validation.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy.
+#[cfg(kani)]
+mod verification {
+    use super::validate_matrix;
+
+    /// Proves [`validate_matrix`] never panics and reports the `(rows, cols)` shape
+    /// for a symbolic rectangular `2×2` one-hot transaction matrix.
+    ///
+    /// The four cells are fully symbolic `bool`s, so the ragged-row scan and the
+    /// shape derivation are exercised over every content combination. A rectangular
+    /// two-by-two matrix is never empty, has items, and is never ragged, so the sole
+    /// reachable outcome is `Ok((2, 2))` — pinned here to prove no degenerate branch
+    /// or panic is reachable for this shape.
+    #[kani::proof]
+    fn assoc_validate_matrix_shape() {
+        let a: bool = kani::any();
+        let b: bool = kani::any();
+        let c: bool = kani::any();
+        let d: bool = kani::any();
+        let transactions = vec![vec![a, b], vec![c, d]];
+        match validate_matrix(&transactions) {
+            Ok((rows, cols)) => assert!(rows == 2 && cols == 2, "shape was not 2x2"),
+            Err(_) => assert!(false, "rectangular 2x2 matrix must validate"),
+        }
+    }
 }
 
 #[cfg(test)]

@@ -216,6 +216,53 @@ pub(super) fn centered(row: &[f64], col_means: &[f64], j: usize) -> f64 {
     v - m
 }
 
+/// Kani proof harness for the dense Gaussian-elimination solver.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy.
+#[cfg(kani)]
+mod verification {
+    use super::{RegressionError, solve};
+
+    /// Magnitude bound on every matrix and right-hand-side entry: it keeps the
+    /// elimination arithmetic finite so a run cannot diverge into `∞`/`NaN` control
+    /// flow, isolating the panic-/overflow- and index-safety argument.
+    const MAX_ABS: f64 = 1e6;
+
+    /// Draws a symbolic entry constrained to be finite and bounded.
+    fn any_entry() -> f64 {
+        let x: f64 = kani::any();
+        kani::assume(x.is_finite());
+        kani::assume(x.abs() <= MAX_ABS);
+        x
+    }
+
+    /// Proves [`solve`] never panics, overflows, or indexes out of bounds for a fully
+    /// symbolic bounded `2×2` system, and returns either a length-2 solution or
+    /// [`RegressionError::Singular`].
+    ///
+    /// Partial pivoting plus the `PIVOT_EPS` guard mean a (near-)singular system is
+    /// reported rather than dividing by zero; every array access already goes through
+    /// `get`/`get_mut`, and this harness discharges that the derived indices and the
+    /// pivot division stay well-defined across the whole bounded coefficient space.
+    /// The `#[kani::unwind(4)]` unrolls the fixed `0..2` elimination and
+    /// back-substitution loops (`n = 2`, plus one turn to observe each exit).
+    #[kani::proof]
+    #[kani::unwind(4)]
+    fn reg_solve_2x2_total() {
+        let a = vec![
+            vec![any_entry(), any_entry()],
+            vec![any_entry(), any_entry()],
+        ];
+        let b = vec![any_entry(), any_entry()];
+        match solve(a, b) {
+            Ok(beta) => assert!(beta.len() == 2, "solution had the wrong length"),
+            Err(RegressionError::Singular) => {}
+            Err(_) => assert!(false, "solve returned an unexpected error variant"),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

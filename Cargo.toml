@@ -1,6 +1,6 @@
 [package]
 name = "stats-claw"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.93"
 license = "MIT OR Apache-2.0"
@@ -19,7 +19,14 @@ readme = "README.md"
 # anchored to the package root with a leading `/` (an unanchored `README.md`
 # would match `benches/results/README.md` at any depth and leak `benches/` into
 # the tarball).
-include = ["/src/**/*.rs", "/README.md", "/CHANGELOG.md", "/LICENSE-MIT", "/LICENSE-APACHE"]
+include = [
+    "/src/**/*.rs",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/VERIFICATION.md",
+    "/LICENSE-MIT",
+    "/LICENSE-APACHE",
+]
 
 [lib]
 name = "stats_claw"
@@ -62,6 +69,11 @@ harness = false
 # ---------------------------------------------------------------------------
 
 [lints.rust]
+# The Kani proof harnesses live behind `#[cfg(kani)]`. Registering the cfg keeps
+# normal (non-Kani) builds free of `unexpected_cfgs` warnings; `cargo kani` sets
+# the `kani` cfg itself when it compiles the harnesses. The harnesses are
+# therefore invisible to `cargo build`/`test`/`clippy` and add no dependency.
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(kani)"] }
 # Justified `unsafe` is permitted (relaxed forbid → deny) so the `core::arch`
 # SIMD batch paths compile: each intrinsic block is feature-gated by a runtime
 # detection and carries a `// SAFETY:` line. No naked/unjustified unsafe.

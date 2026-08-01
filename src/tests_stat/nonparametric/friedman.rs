@@ -100,6 +100,33 @@ pub fn friedman(treatments: &[&[f64]]) -> Result<TestResult> {
     })
 }
 
+/// Kani formal-verification harness for the Friedman input-validation layer.
+///
+/// Compiled only under `cargo kani`. Two treatments trip the leading `k < 3` guard,
+/// so [`friedman`] returns `Err` before the per-subject ranking and chi-squared tail
+/// interior; the symbolic values are never inspected.
+#[cfg(kani)]
+mod verification {
+    use super::friedman;
+    use crate::error::Error;
+
+    /// Proves the Friedman test rejects a design with fewer than three treatments
+    /// via `Err` without panicking, for arbitrary symbolic observations.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn friedman_rejects_insufficient_treatments() {
+        let t0: [f64; 1] = [kani::any()];
+        let t1: [f64; 1] = [kani::any()];
+        let treatments: [&[f64]; 2] = [&t0, &t1];
+        assert!(
+            matches!(friedman(&treatments), Err(Error::InsufficientData)),
+            "under three treatments must reject with InsufficientData"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

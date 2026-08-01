@@ -1,4 +1,5 @@
-//! Log-normal distribution numerics, for the [`LogNormalDistribution`] parameter struct.
+//! Log-normal distribution numerics, for the
+//! [`LogNormalDistribution`].
 //!
 //! Equivalent to `scipy.stats.lognorm(s = std_log_value, scale =
 //! exp(mean_log_value))`: a variable whose logarithm is normal with mean
@@ -18,7 +19,8 @@
 //! ```
 
 use super::super::{Cdf, Moments, Pdf, Quantile, Sample};
-use crate::distributions::{LogNormalDistribution, NormalDistribution};
+use crate::distributions::LogNormalDistribution;
+use crate::distributions::NormalDistribution;
 use crate::rng::SplitMix64;
 use std::f64::consts::PI;
 

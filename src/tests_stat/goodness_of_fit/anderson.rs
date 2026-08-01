@@ -112,6 +112,31 @@ fn round3(x: f64) -> f64 {
     (x * 1000.0).round() / 1000.0
 }
 
+/// Kani formal-verification harness for the Anderson–Darling input-validation layer.
+///
+/// Compiled only under `cargo kani`. A single observation trips the leading `n < 2`
+/// guard, so [`anderson_darling`] returns `Err` before the sorted-CDF and
+/// significance interior; the symbolic value is never inspected.
+#[cfg(kani)]
+mod verification {
+    use super::anderson_darling;
+    use crate::error::Error;
+
+    /// Proves the Anderson–Darling test rejects fewer than two observations via
+    /// `Err` without panicking, for an arbitrary symbolic value.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn anderson_darling_rejects_insufficient() {
+        let one: [f64; 1] = [kani::any()];
+        assert!(
+            matches!(anderson_darling(&one), Err(Error::InsufficientData)),
+            "under two observations must reject with InsufficientData"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

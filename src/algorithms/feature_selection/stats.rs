@@ -75,6 +75,44 @@ pub(super) fn population_variance(values: &[f64]) -> f64 {
     ss / n
 }
 
+/// Kani proof harness for the feature-selection population variance.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy.
+#[cfg(kani)]
+mod verification {
+    use super::population_variance;
+
+    /// Magnitude bound on each observation: it keeps the squared deviations finite so
+    /// the accumulation cannot diverge into `∞`/`NaN`, isolating the non-negativity
+    /// argument (mirrors the moments and distribution-layer proofs).
+    const MAX_ABS: f64 = 1e6;
+
+    /// Proves [`population_variance`] is panic-/overflow-free and non-negative for a
+    /// symbolic three-observation feature column with bounded finite values.
+    ///
+    /// A `ddof = 0` variance is a sum of squared deviations divided by the positive
+    /// count `n`, so within the finite `|v| ≤ 1e6` box the result is provably finite
+    /// and `≥ 0` under `f64` rounding — the invariant `VarianceThreshold`'s keep rule
+    /// (`variance > threshold`) depends on.
+    #[kani::proof]
+    fn fs_population_variance_non_negative() {
+        let v0: f64 = kani::any();
+        let v1: f64 = kani::any();
+        let v2: f64 = kani::any();
+        for v in [v0, v1, v2] {
+            kani::assume(v.is_finite());
+            kani::assume(v.abs() <= MAX_ABS);
+        }
+        let var = population_variance(&[v0, v1, v2]);
+        assert!(
+            var.is_finite(),
+            "population_variance produced a non-finite value"
+        );
+        assert!(var >= 0.0, "population_variance produced a negative value");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

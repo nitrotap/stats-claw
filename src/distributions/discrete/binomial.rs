@@ -1,4 +1,5 @@
-//! Binomial distribution numerics, for the [`BinomialDistribution`] parameter struct.
+//! Binomial distribution numerics, for the
+//! [`BinomialDistribution`].
 //!
 //! Equivalent to `scipy.stats.binom(number_of_trials, success_probability)`. The
 //! PMF uses `ln_gamma` for the binomial coefficient, the CDF is expressed through

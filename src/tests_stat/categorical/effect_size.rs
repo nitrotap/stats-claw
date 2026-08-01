@@ -62,7 +62,7 @@ fn min_dim_minus_one(rows: usize, cols: usize) -> f64 {
 /// [`bootstrap_indices`]), rebuilds each resampled table, recomputes Cramér's V,
 /// and returns the two-sided percentile interval at level `alpha`. Using the
 /// framework's deterministic RNG makes the interval byte-reproducible for a fixed
-/// seed and reference-matching at that seed.
+/// seed, and reference-matching at the stored seed.
 ///
 /// # Arguments
 ///

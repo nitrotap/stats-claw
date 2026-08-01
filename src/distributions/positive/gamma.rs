@@ -1,4 +1,4 @@
-//! Gamma distribution numerics, for the [`GammaDistribution`] parameter struct.
+//! Gamma distribution numerics, for the [`GammaDistribution`].
 //!
 //! Equivalent to `scipy.stats.gamma(shape_parameter, scale = scale_parameter)`.
 //! The density is closed form; the CDF is the regularized lower incomplete gamma
