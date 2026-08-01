@@ -183,7 +183,7 @@ impl StratifiedCrossValidation {
 /// Kani formal-verification harnesses for stratified k-fold input validation.
 ///
 /// [`stratified_kfold_indices`] guards `k` and the label slice before building any
-/// per-class groups, so these prove the two rejection paths over a symbolic `k` (or
+/// per-class groups, so these prove the two rejection paths over every `k < 2` (or
 /// an empty label slice) and every generator state, rather than the sampled sizes
 /// the `#[cfg(test)]` suite uses. The interior per-class shuffle draws through the
 /// same [`uniform_index`] proven in-bounds in [`super::index`], so the full
@@ -192,21 +192,56 @@ impl StratifiedCrossValidation {
 /// `cargo kani` (behind `#[cfg(kani)]`); invisible to normal build/test/clippy. Run
 /// e.g. with
 /// `cargo kani -Z stubbing -p stats-claw --harness resampling_stratified_rejects_small_k`.
+///
+/// # Keeping the `HashMap` grouping out of symbolic execution
+///
+/// Leaving the grouping to the unit suite is not only a modelling preference — on
+/// Linux it is what makes these harnesses terminate at all. CBMC's symbolic
+/// execution walks *both* sides of a branch it cannot fold at symex time; a
+/// `kani::assume` prunes the impossible side only later, at the solver. So a
+/// harness that reaches [`stratified_kfold_indices`] with a symbolic `k` still has
+/// the `k >= 2` branch executed symbolically, and that branch constructs a
+/// `HashMap`, whose `RandomState` seeds itself from OS entropy. On Linux that is
+/// `std::sys::random::linux::getrandom`, a "retry until the buffer is filled" loop
+/// whose trip count depends on a foreign call CBMC cannot model, so CBMC unwinds it
+/// without bound and never returns. macOS reaches entropy through a single
+/// non-looping call, so the same harness completes there in under a second — the
+/// divergence is in the platform's `std`, not in this crate. Both harnesses below
+/// therefore pass `k` concretely, which lets CBMC fold the guard and never reach
+/// the `HashMap` at all.
 #[cfg(kani)]
 mod verification {
     use super::{Error, SplitMix64, stratified_kfold_indices};
 
-    /// Proves the fold-count guard: for *every* symbolic `k < 2` and generator
+    /// Proves the fold-count guard: for *every* `k < 2` and *every* generator
     /// state, [`stratified_kfold_indices`] returns [`Error::InvalidInput`] and never
     /// panics — a stratified split needs at least two folds.
+    ///
+    /// `k` is enumerated concretely instead of drawn with `kani::any()` under
+    /// `assume(k < 2)`. That is a complete enumeration, not a weakening: `k: usize`
+    /// with `k < 2` has exactly the two inhabitants `0` and `1`, so the two cases
+    /// below cover precisely the same input set, and the generator state stays
+    /// fully symbolic in each. Passing `k` as a const parameter guarantees it
+    /// reaches CBMC as a literal, which is what keeps the dead `k >= 2` branch — and
+    /// the entropy-seeded `HashMap` behind it — out of symbolic execution; see the
+    /// module docs for why that matters on Linux.
     #[kani::proof]
     fn resampling_stratified_rejects_small_k() {
-        let k: usize = kani::any();
-        kani::assume(k < 2);
+        rejects_k::<0>();
+        rejects_k::<1>();
+    }
+
+    /// Asserts the `k < 2` rejection for one concrete fold count `K` over a fully
+    /// symbolic generator state.
+    ///
+    /// Called once per admissible `K` by
+    /// [`resampling_stratified_rejects_small_k`], which is where the enumeration is
+    /// justified.
+    fn rejects_k<const K: usize>() {
         let labels = [0usize, 1usize];
         let state: u64 = kani::any();
         let mut rng = SplitMix64::new(state);
-        let result = stratified_kfold_indices(&labels, k, &mut rng);
+        let result = stratified_kfold_indices(&labels, K, &mut rng);
         assert!(
             matches!(result, Err(Error::InvalidInput(_))),
             "k < 2 must be rejected with InvalidInput"
