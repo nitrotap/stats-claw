@@ -1,4 +1,5 @@
-//! Student's t-distribution numerics, for the [`TDistribution`] parameter struct.
+//! Student's t-distribution numerics, for the
+//! [`TDistribution`].
 //!
 //! Equivalent to `scipy.stats.t(degrees_of_freedom)`. The density uses `ln_gamma`
 //! for stability, the CDF is expressed through the regularized incomplete beta

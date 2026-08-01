@@ -1,4 +1,5 @@
-//! Normal (Gaussian) distribution numerics, for the [`NormalDistribution`] parameter struct.
+//! Normal (Gaussian) distribution numerics, for the
+//! [`NormalDistribution`].
 //!
 //! Equivalent to `scipy.stats.norm(loc=mean, scale=standard_deviation)`: the
 //! density is the closed-form Gaussian, the CDF is `½(1 + erf(z))`, and the
@@ -30,8 +31,8 @@ impl NormalDistribution {
     /// Evaluates the density at every point of `xs`, writing the results into
     /// `out`, using the fastest available native-SIMD path (NEON / AVX2 / scalar).
     ///
-    /// This is the dense batch hot path for evaluating many densities at once. It
-    /// is numerically identical to calling [`Pdf::pdf`] per
+    /// This is the dense batch hot path the perf gate measures (`pdf` is the
+    /// gated metric). It is numerically identical to calling [`Pdf::pdf`] per
     /// element (the SIMD `exp` agrees with the scalar `exp` to ≤ 1e-12 relative),
     /// so callers needing a single value should still use [`Pdf::pdf`].
     ///
@@ -242,6 +243,62 @@ fn inv_erf(y: f64) -> f64 {
         x -= err / (two_over_sqrt_pi * (-x * x).exp());
     }
     x
+}
+
+/// Kani formal-verification harnesses for the Normal distribution (tier 2).
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy.
+#[cfg(kani)]
+mod verification {
+    use super::{NormalDistribution, Pdf};
+
+    /// Builds a `NormalDistribution` with symbolic `mean`/`standard_deviation` and
+    /// empty string metadata (unused by the density).
+    ///
+    /// # Arguments
+    ///
+    /// * `mean` — the symbolic location parameter.
+    /// * `standard_deviation` — the symbolic scale parameter.
+    ///
+    /// # Returns
+    ///
+    /// A distribution carrying the two symbolic numeric parameters.
+    fn make(mean: f64, standard_deviation: f64) -> NormalDistribution {
+        NormalDistribution {
+            mean,
+            standard_deviation,
+            variance: standard_deviation * standard_deviation,
+            parameterization: String::new(),
+            distribution_name: String::new(),
+            description: String::new(),
+        }
+    }
+
+    /// Proves the Normal density evaluation is panic-/overflow-free for every valid
+    /// parameterization and every finite, magnitude-bounded evaluation point.
+    ///
+    /// The mathematical invariant `0 ≤ pdf(x) ≤ 1/(σ√2π)` holds because the density
+    /// is `exp(−½z²) · (INV_SQRT_2PI / σ)` with `exp ∈ (0, 1]` for the non-positive
+    /// exponent, `INV_SQRT_2PI > 0`, and `σ > 0`. Kani cannot *prove* that bound: it
+    /// models `exp` with a sound over-approximation that does not encode
+    /// `exp(t) ∈ (0, 1]` for `t ≤ 0`, so a value assertion fails spuriously
+    /// (confirmed: `p >= 0.0` and the peak bound both report counterexamples where
+    /// the modelled `exp` returns an out-of-range value). Per the tier-2 guidance
+    /// this harness therefore verifies the tractable, non-transcendental property —
+    /// that evaluating the density never panics, overflows, or hits UB over the
+    /// whole valid parameter/argument box.
+    #[kani::proof]
+    fn normal_pdf_no_panic() {
+        let mean: f64 = kani::any();
+        let sigma: f64 = kani::any();
+        let x: f64 = kani::any();
+        kani::assume(mean.is_finite() && mean.abs() <= 1e6);
+        kani::assume(x.is_finite() && x.abs() <= 1e6);
+        kani::assume(sigma.is_finite() && sigma >= 1e-3 && sigma <= 1e6);
+        let dist = make(mean, sigma);
+        let _ = dist.pdf(x);
+    }
 }
 
 #[cfg(test)]

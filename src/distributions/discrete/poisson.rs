@@ -1,4 +1,5 @@
-//! Poisson distribution numerics, for the [`PoissonDistribution`] parameter struct.
+//! Poisson distribution numerics, for the
+//! [`PoissonDistribution`].
 //!
 //! Equivalent to `scipy.stats.poisson(rate_parameter)`. The PMF uses `ln_gamma`
 //! for the factorial, the CDF is the regularized upper incomplete gamma

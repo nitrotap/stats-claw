@@ -92,6 +92,32 @@ pub fn one_way_anova(groups: &[&[f64]]) -> Result<TestResult> {
     })
 }
 
+/// Kani formal-verification harness for the one-way ANOVA input-validation layer.
+///
+/// Compiled only under `cargo kani`. Feeding a single group trips the leading
+/// `k < 2` guard, so the function returns `Err` before the between/within
+/// sum-of-squares and F-tail interior; the symbolic values are never read.
+#[cfg(kani)]
+mod verification {
+    use super::one_way_anova;
+    use crate::error::Error;
+
+    /// Proves one-way ANOVA rejects a design with fewer than two groups via `Err`
+    /// without panicking, for arbitrary symbolic observations.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn one_way_anova_rejects_insufficient_groups() {
+        let g0: [f64; 1] = [kani::any()];
+        let groups: [&[f64]; 1] = [&g0];
+        assert!(
+            matches!(one_way_anova(&groups), Err(Error::InsufficientData)),
+            "ANOVA with a single group must reject with InsufficientData"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

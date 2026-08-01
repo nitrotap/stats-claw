@@ -172,6 +172,36 @@ pub(super) fn median_absolute_deviation(values: &[f64]) -> f64 {
     median(&deviations)
 }
 
+/// Kani proof harness for the `as`-free percentile floor.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy.
+#[cfg(kani)]
+mod verification {
+    use super::floor_to_usize;
+
+    /// Proves [`floor_to_usize`] is panic-free and computes the true floor for every
+    /// symbolic finite input in `[0, 2^32)` — the numpy virtual-index range its
+    /// callers pass.
+    ///
+    /// The bound matches the caller's invariant `h = q·(n − 1) < 2^32`; within it the
+    /// 32-step bit-search reconstructs `⌊x⌋` exactly, so the returned `k` satisfies
+    /// `k ≤ x < k + 1`. The `#[kani::unwind(33)]` fully unrolls the fixed 32-iteration
+    /// `while bit > 0` loop (one extra turn to observe the `bit == 0` exit).
+    #[kani::proof]
+    #[kani::unwind(33)]
+    fn outlier_floor_to_usize_correct() {
+        let x: f64 = kani::any();
+        kani::assume(x.is_finite());
+        kani::assume(x >= 0.0);
+        kani::assume(x < 4_294_967_296.0);
+        let k = floor_to_usize(x);
+        let kf = f64::from(u32::try_from(k).unwrap_or(u32::MAX));
+        assert!(kf <= x, "floor exceeded its input");
+        assert!(x < kf + 1.0, "floor was more than one below its input");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

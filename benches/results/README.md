@@ -35,8 +35,8 @@ numeric targets that the gate enforces, unified across every family:
 | Metric | Target | Rationale |
 |--------|--------|-----------|
 | Per-family batch throughput factor vs the Python baseline | **≥ 2.0×** | "Materially faster" — a 2× floor is a conservative, honest bar. A single 2.0× value is applied consistently. Enforced by `gate::TARGET_FACTOR`. |
-| Hot-path single-call latency (p99, warm-up excluded) | **< 1.0 ms** | NFR-2 "sub-millisecond"; per-call costs are nanoseconds-to-microseconds, so the per-call budget has wide headroom. |
-| Streaming peak state size growth | **0 bytes** across stream lengths | NFR-3 "bounded memory independent of stream length"; the estimators are fixed-size structs, so `size_of` is constant. Batch-only families record an `out_of_scope` rationale instead. |
+| Hot-path single-call latency (p99, warm-up excluded) | **< 1.0 ms** | The "sub-millisecond" target; per-call costs are nanoseconds-to-microseconds, so the per-call budget has wide headroom. |
+| Streaming peak state size growth | **0 bytes** across stream lengths | The "bounded memory independent of stream length" target; the estimators are fixed-size structs, so `size_of` is constant. Batch-only families record an `out_of_scope` rationale instead. |
 
 If a real measurement on a given machine comes in **below** a target, the
 recorded factor stays honest (it reflects the actual run) and the *target* is the

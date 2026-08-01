@@ -1,4 +1,5 @@
-//! Chi-squared distribution numerics, for the [`ChiSquaredDistribution`] parameter struct.
+//! Chi-squared distribution numerics, for the
+//! [`ChiSquaredDistribution`].
 //!
 //! Equivalent to `scipy.stats.chi2(degrees_of_freedom)`: the distribution of a
 //! sum of `k` squared standard normals. The density is closed form, the CDF is

@@ -48,3 +48,23 @@ pub(super) const fn hash64(key: u64) -> u64 {
     z = (z ^ (z >> 27)).wrapping_mul(MIX_B);
     z ^ (z >> 31)
 }
+
+/// Kani proof harness for the `HyperLogLog` finalizer hash.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy.
+#[cfg(kani)]
+mod verification {
+    use super::hash64;
+
+    /// Proves [`hash64`] is panic-/overflow-free for *every* symbolic 64-bit key.
+    ///
+    /// Every step is a shift, xor, or `wrapping_mul`, so the finalizer discharges
+    /// Kani's default arithmetic-overflow checks over the entire `u64` domain: the
+    /// register-addressing hash can never trap regardless of the element fed in.
+    #[kani::proof]
+    fn card_hash64_total() {
+        let key: u64 = kani::any();
+        let _ = hash64(key);
+    }
+}

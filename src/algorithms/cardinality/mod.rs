@@ -32,7 +32,7 @@
 //! ## Determinism
 //!
 //! For a given precision and input multiset the estimate is fully deterministic:
-//! the hash is a fixed bijective finalizer, register updates are
+//! the hash (`hash`) is a fixed bijective finalizer, register updates are
 //! order-independent maxima, and the estimator is a pure function of the registers.
 //!
 //! This base block backs the `CardinalityEstimation` computational method.
@@ -199,7 +199,7 @@ impl HyperLogLog {
 
     /// Adds a 64-bit element to the estimator, updating one register.
     ///
-    /// The element is scattered by a fixed bijective finalizer; the
+    /// The element is scattered by the fixed finalizer (`hash::hash64`); the
     /// leading `precision` bits of the hash select the register, and the register is
     /// raised to `max(current, 1 + leading_zeros(remaining bits))`. The update is a
     /// maximum, so it is idempotent in the element (re-adding the same value never
@@ -235,7 +235,7 @@ impl HyperLogLog {
     ///
     /// A pure function of the register array: the harmonic-mean raw estimate with
     /// the small-range (linear-counting) and large-range corrections applied as the
-    /// register state warrants. An estimator with nothing added
+    /// register state warrants (see `estimate`). An estimator with nothing added
     /// returns `0` exactly.
     ///
     /// The result is an *approximation* with relative standard error `≈ 1.04 / √m`
@@ -276,6 +276,63 @@ fn leading_zero_rank(tail: u64, p: u32) -> u8 {
     let zeros = tail.leading_zeros().min(tail_bits);
     // rank = 1 + run length; `zeros + 1 <= 64 - p + 1 <= 61`, fits a u8.
     u8::try_from(zeros + 1).unwrap_or(u8::MAX)
+}
+
+/// Kani proof harnesses for the `HyperLogLog` register-addressing arithmetic.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy. They prove the two integer derivations `add` performs — the
+/// register index and the leading-zero rank — stay in bounds for *every* symbolic
+/// hash and supported precision, which is what makes the `registers.get_mut(index)`
+/// access and the one-byte rank storage provably safe.
+#[cfg(kani)]
+mod verification {
+    use super::{HASH_BITS, MAX_PRECISION, MIN_PRECISION, leading_zero_rank};
+
+    /// Proves [`leading_zero_rank`] returns a rank in `1..=(64 − p + 1)` — hence a
+    /// value that always fits the one-byte register — and never panics, for every
+    /// symbolic hash tail and every supported precision `p ∈ [4, 18]`.
+    ///
+    /// The `min(tail_bits)` clamp plus `+ 1` keep the rank below `64 − p + 2 ≤ 61`,
+    /// so the `u8::try_from` can never saturate; this discharges the register-width
+    /// safety argument symbolically rather than by sampled hashes.
+    #[kani::proof]
+    fn card_leading_zero_rank_in_range() {
+        let tail: u64 = kani::any();
+        let p: u32 = kani::any();
+        kani::assume(p >= u32::from(MIN_PRECISION));
+        kani::assume(p <= u32::from(MAX_PRECISION));
+        let rank = leading_zero_rank(tail, p);
+        assert!(rank >= 1, "rank underflowed below 1");
+        let max_rank = HASH_BITS - p + 1;
+        assert!(
+            u32::from(rank) <= max_rank,
+            "rank exceeded the tail-width ceiling"
+        );
+    }
+
+    /// Proves the register index `hash >> (64 − p)` that [`HyperLogLog::add`] derives
+    /// is strictly below the register count `2^p` for every symbolic hash and every
+    /// supported precision `p ∈ [4, 18]`.
+    ///
+    /// This is the formal guarantee that `add`'s `registers.get_mut(index)` addresses
+    /// an existing register (the array has exactly `2^p` entries): shifting a 64-bit
+    /// word right by `64 − p` leaves at most `p` significant bits, so the result is
+    /// `< 2^p`. The `try_from` mirrors `add`; the shift width `64 − p ∈ [46, 60]` is
+    /// always valid.
+    #[kani::proof]
+    fn card_register_index_in_bounds() {
+        let hash: u64 = kani::any();
+        let p: u32 = kani::any();
+        kani::assume(p >= u32::from(MIN_PRECISION));
+        kani::assume(p <= u32::from(MAX_PRECISION));
+        let index = usize::try_from(hash >> (HASH_BITS - p)).unwrap_or(0);
+        let register_count = 1_usize << p;
+        assert!(
+            index < register_count,
+            "register index escaped the register array"
+        );
+    }
 }
 
 #[cfg(test)]

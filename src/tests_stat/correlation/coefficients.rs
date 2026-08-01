@@ -217,6 +217,69 @@ fn kendall_normal_p(tau: f64, n: usize, alternative: Alternative) -> f64 {
     }
 }
 
+/// Kani formal-verification harnesses for the correlation input-validation layer.
+///
+/// Compiled only under `cargo kani`. Each call supplies a shape that trips a leading
+/// structural guard (a length mismatch, or too few pairs), so the function returns
+/// `Err` before the covariance / Student-t / permutation interior; the symbolic
+/// values are never inspected.
+#[cfg(kani)]
+mod verification {
+    use super::{kendall, pearson, spearman};
+    use crate::error::Error;
+    use crate::tests_stat::Alternative;
+
+    /// Proves the three correlation coefficients reject shape-invalid input via
+    /// `Err` without panicking, for arbitrary symbolic sample values.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn correlation_rejects_bad_shapes() {
+        let two: [f64; 2] = [kani::any(), kani::any()];
+        let three: [f64; 3] = [kani::any(), kani::any(), kani::any()];
+        // Length mismatch -> InvalidInput for all three.
+        assert!(
+            matches!(
+                pearson(&two, &three, Alternative::TwoSided),
+                Err(Error::InvalidInput(_))
+            ),
+            "Pearson length mismatch must reject with InvalidInput"
+        );
+        assert!(
+            matches!(
+                spearman(&two, &three, Alternative::TwoSided),
+                Err(Error::InvalidInput(_))
+            ),
+            "Spearman length mismatch must reject with InvalidInput"
+        );
+        assert!(
+            matches!(
+                kendall(&two, &three, Alternative::TwoSided),
+                Err(Error::InvalidInput(_))
+            ),
+            "Kendall length mismatch must reject with InvalidInput"
+        );
+        // Equal length but too few pairs -> InsufficientData.
+        assert!(
+            matches!(
+                pearson(&two, &two, Alternative::TwoSided),
+                Err(Error::InsufficientData)
+            ),
+            "Pearson with under three pairs must reject with InsufficientData"
+        );
+        let one_a: [f64; 1] = [kani::any()];
+        let one_b: [f64; 1] = [kani::any()];
+        assert!(
+            matches!(
+                kendall(&one_a, &one_b, Alternative::TwoSided),
+                Err(Error::InsufficientData)
+            ),
+            "Kendall with under two pairs must reject with InsufficientData"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

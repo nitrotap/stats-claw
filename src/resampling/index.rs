@@ -5,30 +5,8 @@
 //! `usize`/`f64` conversion here routes through `From`/`TryFrom` or stays in
 //! integer arithmetic.
 
+use crate::numeric::count_to_f64;
 use crate::rng::SplitMix64;
-
-/// `2^32`, used to split an integer-valued `f64` into 32-bit halves.
-const TWO_POW_32: f64 = 4_294_967_296.0;
-
-/// Widens a `usize` count to `f64` without an `as` cast.
-///
-/// Splits the value into 32-bit halves (each losslessly representable as `f64`)
-/// and recombines them, satisfying the `style.rs` no-`as` guard. Counts far below
-/// `2^53` (every realistic sample size) convert exactly.
-///
-/// # Arguments
-///
-/// * `n` — the count to widen.
-///
-/// # Returns
-///
-/// `n` as an `f64`.
-pub(super) fn count_to_f64(n: usize) -> f64 {
-    let wide = u64::try_from(n).unwrap_or(u64::MAX);
-    let hi = u32::try_from(wide >> 32).unwrap_or(0);
-    let lo = u32::try_from(wide & 0xFFFF_FFFF).unwrap_or(0);
-    f64::from(hi).mul_add(TWO_POW_32, f64::from(lo))
-}
 
 /// Returns `floor(fraction * n)` as a `usize`, computed without an `as` cast.
 ///
@@ -78,4 +56,64 @@ pub(super) fn uniform_index(rng: &mut SplitMix64, n: usize) -> usize {
     let span = u64::try_from(n).unwrap_or(u64::MAX);
     let draw = rng.next_u64() % span;
     usize::try_from(draw).unwrap_or(n - 1)
+}
+
+/// Kani formal-verification harnesses for the shared resampling index arithmetic.
+///
+/// These prove properties over *all* generator states (symbolic `kani::any()`
+/// `u64`) and small symbolic collection sizes, rather than the sampled draws the
+/// `#[cfg(test)]` suites exercise. The crown result is
+/// [`uniform_index_in_bounds`]: every index the resamplers derive from a
+/// `SplitMix64` draw lands in `0..n`, for every one of the `2^64` generator
+/// states. Compiled only under `cargo kani` (behind `#[cfg(kani)]`) and invisible
+/// to normal build/test/clippy. Run e.g. with
+/// `cargo kani -Z stubbing -p stats-claw --harness resampling_uniform_index_in_bounds`.
+#[cfg(kani)]
+mod verification {
+    use super::{SplitMix64, floor_rank, uniform_index};
+
+    /// Upper bound on the symbolic collection size the index harnesses explore.
+    ///
+    /// The index arithmetic is size-independent (a modulo reduction and a
+    /// binary search), so a small representative range keeps the symbolic modulo
+    /// and loop unrolling tractable while still covering the empty-to-tiny sizes
+    /// resampling actually uses. Matches the task's "small symbolic-or-fixed n"
+    /// guidance.
+    const MAX_N: usize = 5;
+
+    /// Proves the crown index-safety property: for *every* generator state and
+    /// every collection size `1..=MAX_N`, [`uniform_index`] returns an index
+    /// strictly less than `n` — so any slice access the resamplers make with it is
+    /// in bounds. Composes with `rng::next_u64` over the full symbolic state space:
+    /// `draw = next_u64() % n < n`, and the `usize` widening of a value below `n`
+    /// cannot fail, so the fallback branch is never taken.
+    #[kani::proof]
+    fn resampling_uniform_index_in_bounds() {
+        let state: u64 = kani::any();
+        let n: usize = kani::any();
+        kani::assume(n > 0);
+        kani::assume(n <= MAX_N);
+        let mut rng = SplitMix64::new(state);
+        let idx = uniform_index(&mut rng, n);
+        assert!(idx < n, "uniform_index escaped 0..n: {idx} >= {n}");
+    }
+
+    /// Proves [`floor_rank`] never panics and always returns a rank in `0..=n` for
+    /// a symbolic probability `fraction` and every collection size `0..=MAX_N`.
+    /// The binary search shrinks `hi` toward `lo` monotonically; the `hi = mid - 1`
+    /// step only runs when `lo < hi`, forcing `mid >= lo + 1 >= 1`, so the
+    /// subtraction cannot underflow. Bounding the rank keeps every percentile
+    /// index the interval estimator derives inside `0..n`.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn resampling_floor_rank_in_range() {
+        let fraction: f64 = kani::any();
+        kani::assume(fraction.is_finite());
+        kani::assume(fraction >= 0.0);
+        kani::assume(fraction <= 1.0);
+        let n: usize = kani::any();
+        kani::assume(n <= MAX_N);
+        let rank = floor_rank(fraction, n);
+        assert!(rank <= n, "floor_rank escaped 0..=n: {rank} > {n}");
+    }
 }

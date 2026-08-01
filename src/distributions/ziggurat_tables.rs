@@ -2,8 +2,9 @@
 //
 // Equal-area 128-layer tables. `ZIG_K[i]` is the 31-bit acceptance threshold,
 // `ZIG_W[i]` scales the magnitude to the layer's x, `ZIG_F[i]` is the density at
-// the layer edge. Regenerate via the equal-area layer construction (Doornik 2005);
-// verified by `ziggurat::tests::table_construction_invariant_holds`.
+// the layer edge. The tables come from the standard equal-area recurrence solved
+// for the tail cutoff; the invariant is verified in-tree by
+// `ziggurat::tests::table_construction_invariant_holds`.
 
 /// 31-bit acceptance thresholds per layer.
 #[allow(clippy::unreadable_literal)]

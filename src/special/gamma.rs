@@ -319,6 +319,76 @@ fn ln_gamma_q_cf(a: f64, x: f64) -> f64 {
     a.mul_add(x.ln(), -x) - ln_gamma(a) + h.ln()
 }
 
+/// Kani formal-verification harnesses for the gamma-family combinatorics.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy. They prove panic-freedom over *all* `usize` inputs, not the
+/// sampled fixtures the distribution suites use.
+#[cfg(kani)]
+mod verification {
+    use super::{ln_choose, usize_to_f64};
+
+    /// Substitute for [`ln_gamma`] used by the [`ln_choose`] proof.
+    ///
+    /// [`ln_gamma`]'s body is dominated by `ln`-in-a-loop (the Lanczos sum) plus a
+    /// `sin`/`ln` reflection path. CBMC must bit-blast those transcendental libm
+    /// models, which does not converge within the time budget — verified: the proof
+    /// fails to close in 200 s even with `n, k ≤ 2` (so the cost is the float model,
+    /// not the input range). `ln_gamma`'s numerical correctness is instead pinned by
+    /// the golden-fixture suite (`special::tests`, distribution suites). Stubbing it
+    /// with an arbitrary `f64` turns this into a *modular* proof: it verifies
+    /// [`ln_choose`]'s **own** control flow and the integer→float conversions are
+    /// panic-/overflow-free for every symbolic `(n, k)`, treating the numeric kernel
+    /// as a verified black box.
+    ///
+    /// # Returns
+    ///
+    /// A symbolic *finite* `f64` standing in for `ln Γ(x)`. Finiteness matches the
+    /// real function's behaviour for the `≥ 1` arguments `ln_choose` feeds it at
+    /// realistic counts (`ln Γ` only overflows to `+∞` for astronomically large
+    /// arguments, the same extreme-magnitude regime the moments proof excludes).
+    fn stub_ln_gamma(_x: f64) -> f64 {
+        let y: f64 = kani::any();
+        kani::assume(y.is_finite());
+        y
+    }
+
+    /// Proves [`usize_to_f64`] — the only integer-arithmetic surface in
+    /// [`ln_choose`] — is panic-/overflow-free and non-negative for every symbolic
+    /// `usize`. All steps are `try_from`, shifts/masks, and one `mul_add`; none can
+    /// panic or wrap. This is the fast, transcendental-free core of the conversion.
+    #[kani::proof]
+    fn gamma_usize_to_f64_non_negative() {
+        let n: usize = kani::any();
+        let y = usize_to_f64(n);
+        assert!(y.is_finite(), "usize_to_f64 produced a non-finite value");
+        assert!(y >= 0.0, "usize_to_f64 produced a negative value");
+    }
+
+    /// Proves [`ln_choose`]'s own logic is panic-/overflow-free for every pair of
+    /// symbolic `usize` arguments, with [`ln_gamma`] stubbed (see
+    /// [`stub_ln_gamma`]). Covers the `k > n → −∞` short-circuit, the two
+    /// [`usize_to_f64`] conversions, and the three-term combination — the surface
+    /// that could realistically panic or overflow, independent of the transcendental
+    /// kernel.
+    ///
+    /// Requires the unstable stubbing feature: run with
+    /// `cargo kani -Z stubbing --harness ln_choose_own_logic_no_panic -p stats-claw`.
+    #[kani::proof]
+    #[kani::stub(super::ln_gamma, stub_ln_gamma)]
+    fn ln_choose_own_logic_no_panic() {
+        let n: usize = kani::any();
+        let k: usize = kani::any();
+        let result = ln_choose(n, k);
+        if k > n {
+            assert!(
+                result == f64::NEG_INFINITY,
+                "ln_choose(n, k) with k > n must be -inf"
+            );
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

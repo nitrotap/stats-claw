@@ -287,12 +287,17 @@ unsafe fn sample_neon(mean: f64, std_dev: f64, rng: &mut SplitMix64, out: &mut [
         let z1 = if a1 { c1 } else { resolve_lane(w1, rng) };
 
         // Pack the two standardized draws, apply mean + std_dev·z in NEON, store.
-        let mut zv = vsetq_lane_f64::<0>(z0, vld1q_f64([0.0_f64, 0.0].as_ptr()));
+        // SAFETY: reads exactly the two elements of the on-stack zero array; `neon`
+        // is guaranteed by the caller's contract.
+        let zeros = unsafe { vld1q_f64([0.0_f64, 0.0].as_ptr()) };
+        let mut zv = vsetq_lane_f64::<0>(z0, zeros);
         zv = vsetq_lane_f64::<1>(z1, zv);
         let res = vfmaq_f64(vmean, vstd, zv);
         // SAFETY: `i + 2 <= body <= out.len()`, so the 2-wide store is in-bounds;
         // `neon` is guaranteed by the caller's contract.
-        vst1q_f64(out.as_mut_ptr().add(i), res);
+        unsafe {
+            vst1q_f64(out.as_mut_ptr().add(i), res);
+        }
         i += lanes;
     }
 
@@ -303,7 +308,7 @@ unsafe fn sample_neon(mean: f64, std_dev: f64, rng: &mut SplitMix64, out: &mut [
 
 /// AVX2 (`x86_64`) four-lane `f64` batch ziggurat fill.
 ///
-/// Analogous to `sample_neon` with four `f64` lanes: four fast-path candidates per
+/// Analogous to [`sample_neon`] with four `f64` lanes: four fast-path candidates per
 /// step, the affine transform applied with FMA, accepted lanes stored vectorized,
 /// rejected lanes resolved by the scalar oracle, and a scalar tail.
 ///
@@ -360,6 +365,22 @@ unsafe fn sample_avx2(mean: f64, std_dev: f64, rng: &mut SplitMix64, out: &mut [
     if body < n {
         sample_scalar(mean, std_dev, rng, out.get_mut(body..n).unwrap_or(&mut []));
     }
+}
+
+/// Kani formal-verification harnesses for the ziggurat index derivation.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy. They prove every layer index derived from a symbolic RNG
+/// word lands inside the 128-entry `ZIG_K`/`ZIG_W`/`ZIG_F` tables, and that the
+/// scalar fast-path and the wedge fixup are panic-free — formally discharging the
+/// table indexing (and the reasoning behind the `unsafe` SIMD lane layout, whose
+/// `core::arch` intrinsics CBMC cannot model directly).
+#[cfg(kani)]
+mod verification {
+    // Harness bodies live in the sibling `ziggurat_verification.rs` so this file
+    // stays within the 500-line `tests/style.rs` limit; `include!` splices them
+    // into this module (mirroring the `ziggurat_tables.rs` include above).
+    include!("ziggurat_verification.rs");
 }
 
 #[cfg(test)]

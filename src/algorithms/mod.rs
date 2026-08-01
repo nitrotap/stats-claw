@@ -1,4 +1,4 @@
-//! Unsupervised learning algorithms.
+//! Machine-learning algorithms (unsupervised and supervised).
 //!
 //! This module defines the shared algorithm primitives — the squared-Euclidean
 //! distance helper and a small `Matrix` view over row-major data — and houses the
@@ -6,6 +6,11 @@
 //! routine consumes `&[Vec<f64>]` (one inner `Vec` per observation) and returns a
 //! label vector that the equivalence suite compares to `scikit-learn` by adjusted
 //! Rand index.
+//!
+//! Supervised classification lives in [`classification`] — deterministic,
+//! closed-form Naive Bayes (Gaussian and Categorical variants) reproducing
+//! `sklearn.naive_bayes` semantics, each emitting a `ClassificationResult` with
+//! accuracy plus macro-averaged precision / recall / F1.
 //!
 //! Decomposition/embedding (PCA, factor analysis, ICA, t-SNE, UMAP, LLE) live in
 //! the [`decomposition`] subgroup; they compare to their `scikit-learn` references
@@ -29,6 +34,7 @@
 pub mod association;
 pub mod cardinality;
 pub mod change_point;
+pub mod classification;
 pub mod clustering;
 pub mod decomposition;
 pub mod density;
@@ -101,25 +107,66 @@ pub fn centroid(points: &[&[f64]], dim: usize) -> Vec<f64> {
     sum
 }
 
-/// Widens a `usize` count to `f64` without an `as` cast.
+/// Re-export of the shared count-widening helper (see [`crate::numeric`]).
 ///
-/// Counts here are sample/cluster sizes far below `2^53`, so splitting into
-/// 32-bit halves and recombining reproduces the value exactly while satisfying the
-/// `style.rs` no-`as` guard.
+/// This primitive was originally defined here; the single implementation now
+/// lives in [`crate::numeric::count_to_f64`]. It is demoted from `pub` to
+/// `pub(crate)` — a framework-internal conversion, not part of the public API —
+/// while keeping the `crate::algorithms::count_to_f64` path its many in-crate
+/// callers already use.
+pub(crate) use crate::numeric::count_to_f64;
+
+/// Kani proof harnesses for the shared algorithm primitives.
 ///
-/// # Arguments
-///
-/// * `n` — the count to widen.
-///
-/// # Returns
-///
-/// `n` as an `f64` (exact for the sample sizes this crate handles).
-#[must_use]
-pub fn count_to_f64(n: usize) -> f64 {
-    let wide = u64::try_from(n).unwrap_or(u64::MAX);
-    let hi = u32::try_from(wide >> 32).unwrap_or(0);
-    let lo = u32::try_from(wide & 0xFFFF_FFFF).unwrap_or(0);
-    f64::from(hi).mul_add(4_294_967_296.0, f64::from(lo))
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy. They prove the count widening and the clustering distance
+/// primitive are panic-/overflow-free over symbolic inputs, not sampled ones. Run
+/// with e.g.
+/// `cargo kani -Z stubbing -p stats-claw --harness algo_count_to_f64_faithful`.
+#[cfg(kani)]
+mod verification {
+    use super::{count_to_f64, euclidean_sq};
+
+    /// Magnitude bound on each coordinate, matching the distribution-layer proofs:
+    /// it keeps the squared differences finite so the sum cannot diverge into
+    /// `∞`/`NaN` control flow, isolating the panic-/overflow-freedom argument.
+    const MAX_ABS: f64 = 1e6;
+
+    /// Proves [`count_to_f64`] is panic-/overflow-free and yields a finite,
+    /// non-negative value for *every* symbolic `usize`.
+    ///
+    /// All steps are `try_from`, shifts/masks, and one `mul_add`; none can panic or
+    /// wrap. This is the fast, transcendental-free core the whole algorithms layer
+    /// relies on to widen sample and cluster counts without an `as` cast.
+    #[kani::proof]
+    fn algo_count_to_f64_faithful() {
+        let n: usize = kani::any();
+        let y = count_to_f64(n);
+        assert!(y.is_finite(), "count_to_f64 produced a non-finite value");
+        assert!(y >= 0.0, "count_to_f64 produced a negative value");
+    }
+
+    /// Proves [`euclidean_sq`] — the squared-distance primitive every clustering
+    /// routine accumulates — is panic-/overflow-free and non-negative for two
+    /// symbolic two-dimensional points with bounded finite coordinates.
+    ///
+    /// The `|coordinate| ≤ 1e6` bound keeps each squared difference finite, so the
+    /// non-negativity is a provable property of the `f64` arithmetic (not merely of
+    /// exact reals): a sum of finite squares is finite and `≥ 0`.
+    #[kani::proof]
+    fn algo_euclidean_sq_non_negative() {
+        let a0: f64 = kani::any();
+        let a1: f64 = kani::any();
+        let b0: f64 = kani::any();
+        let b1: f64 = kani::any();
+        for v in [a0, a1, b0, b1] {
+            kani::assume(v.is_finite());
+            kani::assume(v.abs() <= MAX_ABS);
+        }
+        let d = euclidean_sq(&[a0, a1], &[b0, b1]);
+        assert!(d.is_finite(), "euclidean_sq produced a non-finite value");
+        assert!(d >= 0.0, "euclidean_sq produced a negative distance");
+    }
 }
 
 #[cfg(test)]

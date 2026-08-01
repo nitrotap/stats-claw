@@ -1,7 +1,7 @@
 //! Clustering algorithms and their shared types.
 //!
 //! Each concrete algorithm lives in its own submodule (`kmeans`, `dbscan`,
-//! `hierarchical`, `mean_shift`, `affinity`, `spectral`, `gmm`) and is re-exported
+//! `hierarchical`, `divisive`, `mean_shift`, `affinity`, `spectral`, `gmm`) and is re-exported
 //! here so callers name `clustering::<algo>` without the submodule path. This module
 //! also owns the small types every member shares: the [`NOISE`] sentinel label,
 //! cluster result structs, and the contiguous-relabeling helper.
@@ -13,6 +13,7 @@
 
 mod affinity;
 mod dbscan;
+mod divisive;
 mod gmm;
 mod hierarchical;
 mod kmeans;
@@ -21,6 +22,7 @@ mod spectral;
 
 pub use affinity::affinity_propagation;
 pub use dbscan::{DbscanResult, dbscan};
+pub use divisive::divisive;
 pub use gmm::{GmmResult, gmm_em};
 pub use hierarchical::{Linkage, agglomerative};
 pub use kmeans::{KMeansResult, kmeans};
@@ -31,7 +33,8 @@ pub use spectral::spectral;
 ///
 /// `scikit-learn` uses `-1`; since stats-claw labels are unsigned, the maximum
 /// `usize` is reserved as the noise sentinel. The adjusted Rand index treats all
-/// noise-labelled points as a single group.
+/// noise-labelled points as a single group, matching the convention the
+/// equivalence suites are written against.
 pub const NOISE: usize = usize::MAX;
 
 /// Relabels a partition so its cluster ids are contiguous from `0`, preserving the

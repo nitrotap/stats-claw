@@ -91,7 +91,7 @@ fn pairs_df(rows: usize, cols: usize) -> f64 {
 ///
 /// The statistic is `Σ (O − E)² / E` with expected counts `E_ij = rowᵢ·colⱼ / n`,
 /// and the p-value is the upper-tail probability `P(χ²_df ≥ statistic)` evaluated
-/// through [`crate::distributions::ChiSquaredDistribution`]'s CDF.
+/// through [`ChiSquaredDistribution`](crate::distributions::ChiSquaredDistribution)'s CDF.
 ///
 /// # Arguments
 ///
@@ -130,6 +130,40 @@ pub fn chi_squared_independence(table: &[Vec<f64>]) -> Result<TestResult> {
         df: Some(df),
         effect_size: None,
     })
+}
+
+/// Kani formal-verification harness for the chi-squared table-validation layer.
+///
+/// Compiled only under `cargo kani`. Feeds table shapes that trip the leading
+/// structural guards (an empty table and a 1×1 table), so [`chi_squared_stat`]
+/// returns `Err` before the expected-count and chi-squared-tail interior; the
+/// symbolic cell value is never inspected.
+#[cfg(kani)]
+mod verification {
+    use super::chi_squared_stat;
+    use crate::error::Error;
+
+    /// Proves the chi-squared statistic builder rejects an empty table and a
+    /// sub-2×2 table via `Err` without panicking, for an arbitrary symbolic count.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn chi_squared_stat_rejects_bad_tables() {
+        let empty: [Vec<f64>; 0] = [];
+        assert!(
+            matches!(chi_squared_stat(&empty), Err(Error::EmptyInput)),
+            "empty contingency table must reject with EmptyInput"
+        );
+        let one_by_one: [Vec<f64>; 1] = [vec![kani::any::<f64>()]];
+        assert!(
+            matches!(
+                chi_squared_stat(&one_by_one),
+                Err(Error::DegenerateInput(_))
+            ),
+            "sub-2x2 table must reject with DegenerateInput"
+        );
+    }
 }
 
 #[cfg(test)]

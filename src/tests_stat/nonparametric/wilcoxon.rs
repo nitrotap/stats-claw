@@ -219,6 +219,37 @@ fn p_value(r_plus: f64, mean: f64, se: f64, alternative: Alternative, use_contin
     }
 }
 
+/// Kani formal-verification harness for the Wilcoxon input-validation layer.
+///
+/// Compiled only under `cargo kani`. A length mismatch trips the leading
+/// `a.len() != b.len()` guard, so [`wilcoxon_signed_rank`] returns `Err` before the
+/// signed-rank and normal-approximation interior; the symbolic values are never
+/// inspected.
+#[cfg(kani)]
+mod verification {
+    use super::wilcoxon_signed_rank;
+    use crate::error::Error;
+    use crate::tests_stat::Alternative;
+
+    /// Proves the Wilcoxon signed-rank test rejects length-mismatched pairs via
+    /// `Err` without panicking, for arbitrary symbolic values.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn wilcoxon_rejects_length_mismatch() {
+        let a: [f64; 2] = [kani::any(), kani::any()];
+        let b: [f64; 3] = [kani::any(), kani::any(), kani::any()];
+        assert!(
+            matches!(
+                wilcoxon_signed_rank(&a, &b, Alternative::TwoSided, true),
+                Err(Error::InvalidInput(_))
+            ),
+            "length-mismatched pairs must reject with InvalidInput"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

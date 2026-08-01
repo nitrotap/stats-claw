@@ -1,0 +1,43 @@
+carve report for `stats-claw`
+================================
+
+namespace:            ds
+closure files copied: 146
+  + emitted:          src/lib.rs and one types file per group
+selected entities:    112 (family-eligible)
+types emitted:        26 (referenced by shipped code)
+skip regions removed: 5
+doc-hygiene flags:    0
+preserved (never written): README.md, CHANGELOG.md, RELEASING.md, VERIFICATION.md, Cargo.toml, Cargo.lock, LICENSE-MIT, LICENSE-APACHE, assets, tests, reference, benches, docs
+
+emitted types by destination module:
+  [classification] -> src/algorithms/classification/types.rs  (public at crate::algorithms::classification::*)
+      - ClassificationResult
+  [distributions] -> src/distributions/types.rs  (public at crate::distributions::*)
+      - BetaDistribution
+      - BinomialDistribution
+      - CauchyDistribution
+      - ChiSquaredDistribution
+      - ExponentialDistribution
+      - FDistribution
+      - GammaDistribution
+      - LaplaceDistribution
+      - LogNormalDistribution
+      - NormalDistribution
+      - PoissonDistribution
+      - TDistribution
+      - UniformDistribution
+      - WeibullDistribution
+  [likelihood] -> src/likelihood/types.rs  (public at crate::likelihood::*)
+      - BinomialLikelihood
+      - CategoricalLikelihood
+      - ExponentialLikelihood
+      - MaximumLikelihood
+      - NormalLikelihood
+      - PoissonLikelihood
+  [resampling] -> src/resampling/types/mod.rs  (public at crate::resampling::*)
+      - CrossValidation
+      - JackknifeResampling
+      - LeaveOneOutCrossValidation
+      - MonteCarloResampling
+      - StratifiedCrossValidation

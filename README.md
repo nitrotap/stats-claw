@@ -30,7 +30,7 @@ the Rust ecosystem otherwise lacks.
 
 ```toml
 [dependencies]
-stats-claw = "0.1"
+stats-claw = "0.2"
 ```
 
 ```rust
@@ -51,7 +51,13 @@ assert_eq!(z.variance(), Some(1.0));
 - **scipy-grade, and proven so.** Every numeric is checked against committed golden fixtures
   generated from the reference Python libraries, within documented tolerances (down to 1e-12).
 - **Deterministic by construction.** A hand-written `SplitMix64` PRNG gives byte-identical
-  sampling and resampling across platforms — reproducible tests, reproducible science.
+  uniform sampling and resampling across platforms — reproducible tests, reproducible
+  science. (See [Compatibility](#compatibility) for the one documented exception.)
+- **Formally verified where it counts.** 68 [Kani](https://model-checking.github.io/kani/)
+  proof harnesses model-check panic-freedom and index bounds over complete scalar input
+  domains — every RNG state, every hash word — rather than sampled ones. See
+  [VERIFICATION.md](VERIFICATION.md) for what is proven and, just as importantly, what is
+  not.
 - **The inference suite Rust was missing.** Exact and asymptotic p-values for the classical
   tests (t, ANOVA, χ², Fisher, Mann–Whitney, Wilcoxon, Kruskal–Wallis, KS, Shapiro), with
   log-space tails for extreme significance.
@@ -204,11 +210,44 @@ accurate instead of underflowing to zero, and single-pass streaming estimators t
 state. `unsafe` is confined to feature-gated SIMD intrinsics, each carrying a `// SAFETY:`
 justification; everything else is safe Rust.
 
+## Verification
+
+Beyond the test suite, the crate carries **68 Kani proof harnesses** — model-checking
+properties over every input of a type rather than a sampled set. They establish
+*panic-freedom, index-bounds, and structural invariants*, for example:
+
+- `next_f64()` lands in `[0, 1)` for **every** one of the PRNG's 2^64 states.
+- Every index derived into the 128-entry ziggurat tables is in bounds, for every `u64`
+  drawn.
+- The HyperLogLog register index stays below `2^p` for every hash word at every
+  supported precision.
+- The regression 2×2 solver is total: `Ok` or `Singular`, never a panic.
+
+Two things they do **not** establish. They say nothing about numerical accuracy — Kani
+over-approximates `exp`/`ln`, so accuracy remains the job of the golden-fixture
+equivalence suite above. And because CBMC is a *bounded* model checker, properties
+parameterised by a collection size (permutation bijectivity, k-fold partitioning) are
+proven at small fixed sizes rather than for all `N`; VERIFICATION.md states the bound for
+each. `unsafe` (the SIMD paths) is covered dynamically by Miri instead, since model
+checkers cannot see through `core::arch` intrinsics.
+
+The harnesses live behind `#[cfg(kani)]`, so they are invisible to `cargo build`/`test`
+and Kani is never a dependency — the zero-runtime-dependency guarantee is unchanged.
+Full detail, including the documented limits, is in [VERIFICATION.md](VERIFICATION.md).
+
 ## Compatibility
 
 - **MSRV:** Rust 1.93 (edition 2024). The minimum supported version is tested in CI.
 - **Dependencies:** none at runtime (std-only).
-- **Determinism:** identical results across operating systems and architectures.
+- **Determinism:** the PRNG stream is byte-identical across operating systems and
+  architectures, and so is anything computed from it by plain arithmetic — Rust does not
+  reassociate floating-point, so even a 100k-term reduction over the uniform stream is
+  bit-identical on every target and at every optimisation level. The documented exception
+  is the normal sampler: Box–Muller evaluates `ln`, `sin`, and `cos` through the platform
+  math library, which is accurate to well under an ULP but is *not* correctly rounded. So
+  individual `standard_normal` draws — and any statistic accumulated from them — can differ
+  in the last ULP or two between targets, and even between optimisation levels of the same
+  source. Compare those with a tolerance rather than bit-for-bit.
 
 ## Status
 

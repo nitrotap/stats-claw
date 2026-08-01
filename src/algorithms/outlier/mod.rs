@@ -277,6 +277,61 @@ pub fn modified_zscore_detect(data: &[f64], threshold: f64) -> Result<Detection,
     Ok(Detection { scores, mask })
 }
 
+/// Kani proof harness for the shared outlier-detector input validation.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy.
+#[cfg(kani)]
+mod verification {
+    use super::{OutlierError, validate};
+
+    /// Proves the shared [`validate`] front door never panics and returns exactly
+    /// the right classification for a symbolic two-observation sample and a symbolic
+    /// threshold.
+    ///
+    /// Both observations and the threshold are fully symbolic (`NaN`/`±∞`
+    /// permitted), so this covers every finiteness combination the detectors can be
+    /// handed. `Ok` is proved to imply both observations are finite *and* the
+    /// threshold is finite and positive — i.e. no degenerate input slips past the
+    /// guard into the arithmetic.
+    #[kani::proof]
+    fn outlier_validate_rejects_degenerate() {
+        let x0: f64 = kani::any();
+        let x1: f64 = kani::any();
+        let threshold: f64 = kani::any();
+        let data = [x0, x1];
+        match validate(&data, threshold) {
+            Ok(()) => {
+                assert!(
+                    x0.is_finite() && x1.is_finite(),
+                    "Ok passed a non-finite sample"
+                );
+                assert!(
+                    threshold.is_finite() && threshold > 0.0,
+                    "Ok passed a non-positive threshold"
+                );
+            }
+            Err(OutlierError::NonFinite) => {
+                assert!(
+                    !x0.is_finite() || !x1.is_finite(),
+                    "NonFinite on a finite sample"
+                );
+            }
+            Err(OutlierError::InvalidThreshold) => {
+                assert!(
+                    !threshold.is_finite() || threshold <= 0.0,
+                    "InvalidThreshold on a valid threshold"
+                );
+            }
+            Err(OutlierError::EmptyInput | OutlierError::ZeroSpread) => {
+                // A two-element sample is never empty, and `validate` never inspects
+                // spread; reaching either here would be a control-flow bug.
+                assert!(false, "validate returned an unreachable variant");
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 #[path = "tests.rs"]
 mod tests;

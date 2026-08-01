@@ -178,6 +178,31 @@ fn poly(coeffs: &[f64], x: f64) -> f64 {
     coeffs.iter().rev().fold(0.0, |acc, &c| acc.mul_add(x, c))
 }
 
+/// Kani formal-verification harness for the Shapiro–Wilk input-validation layer.
+///
+/// Compiled only under `cargo kani`. Two observations trip the leading `n < 3`
+/// guard, so [`shapiro_wilk`] returns `Err` before the Royston-weight and W-statistic
+/// interior; the symbolic values are never inspected.
+#[cfg(kani)]
+mod verification {
+    use super::shapiro_wilk;
+    use crate::error::Error;
+
+    /// Proves the Shapiro–Wilk test rejects fewer than three observations via `Err`
+    /// without panicking, for arbitrary symbolic values.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn shapiro_wilk_rejects_insufficient() {
+        let two: [f64; 2] = [kani::any(), kani::any()];
+        assert!(
+            matches!(shapiro_wilk(&two), Err(Error::InsufficientData)),
+            "under three observations must reject with InsufficientData"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

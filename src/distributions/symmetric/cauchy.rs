@@ -1,4 +1,5 @@
-//! Cauchy (Lorentz) distribution numerics, for the [`CauchyDistribution`] parameter struct.
+//! Cauchy (Lorentz) distribution numerics, for the
+//! [`CauchyDistribution`].
 //!
 //! Equivalent to `scipy.stats.cauchy(loc=location, scale=scale)`: a symmetric,
 //! heavy-tailed distribution with no finite moments. The CDF/quantile are the

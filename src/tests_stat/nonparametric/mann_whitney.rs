@@ -201,6 +201,37 @@ fn p_value(
     }
 }
 
+/// Kani formal-verification harness for the Mann–Whitney input-validation layer.
+///
+/// Compiled only under `cargo kani`. An empty first sample trips the leading
+/// `a.is_empty() || b.is_empty()` guard, so [`mann_whitney_u`] returns `Err` before
+/// the rank-sum and normal-approximation interior; the symbolic second sample is
+/// never inspected.
+#[cfg(kani)]
+mod verification {
+    use super::mann_whitney_u;
+    use crate::error::Error;
+    use crate::tests_stat::Alternative;
+
+    /// Proves the Mann–Whitney U test rejects an empty sample via `Err` without
+    /// panicking, for an arbitrary symbolic non-empty counterpart.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn mann_whitney_u_rejects_empty_sample() {
+        let empty: [f64; 0] = [];
+        let other: [f64; 1] = [kani::any()];
+        assert!(
+            matches!(
+                mann_whitney_u(&empty, &other, Alternative::TwoSided, true),
+                Err(Error::EmptyInput)
+            ),
+            "empty sample must reject with EmptyInput"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

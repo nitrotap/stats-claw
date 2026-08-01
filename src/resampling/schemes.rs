@@ -134,3 +134,102 @@ pub fn kfold_indices(n: usize, k: usize, rng: &mut SplitMix64) -> Vec<(Vec<usize
         })
         .collect()
 }
+
+/// Kani formal-verification harnesses for the seeded resampling schemes.
+///
+/// These prove structural index-safety and partition invariants over *all*
+/// generator states (symbolic `kani::any()` `u64`) for small fixed collection
+/// sizes, rather than the sampled draws the `#[cfg(test)]` suite exercises. Every
+/// scheme derives its indices from [`uniform_index`](super::index::uniform_index),
+/// whose in-bounds proof lives in [`super::index`]; the harnesses here add the
+/// scheme-level invariants (bijection, partition) that compose on top. Compiled
+/// only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy. Run e.g. with
+/// `cargo kani -Z stubbing -p stats-claw --harness resampling_permutation_is_bijection`.
+#[cfg(kani)]
+mod verification {
+    use super::{SplitMix64, bootstrap_indices, kfold_indices, permutation};
+
+    /// Proves [`permutation`] returns a genuine bijection of `0..N` for *every*
+    /// generator state: length `N`, every element in `0..N`, and each index
+    /// appearing exactly once. The Fisher–Yates swaps draw `j = uniform_index(i+1)`
+    /// with `j <= i < N`, so every `swap(i, j)` is in bounds — Kani discharges the
+    /// slice-access safety while the `seen` tally proves no index is dropped or
+    /// duplicated. `N = 4` keeps the three symbolic swaps tractable.
+    #[kani::proof]
+    #[kani::unwind(8)]
+    fn resampling_permutation_is_bijection() {
+        const N: usize = 4;
+        let state: u64 = kani::any();
+        let mut rng = SplitMix64::new(state);
+        let perm = permutation(N, &mut rng);
+        assert!(perm.len() == N, "permutation length changed from {N}");
+        let mut seen = [false; N];
+        for &v in &perm {
+            assert!(v < N, "permutation produced an out-of-range index {v}");
+            assert!(!seen[v], "permutation repeated index {v}");
+            seen[v] = true;
+        }
+        assert!(seen.iter().all(|&s| s), "permutation dropped an index");
+    }
+
+    /// Proves the k-fold test sets partition `0..N` for *every* generator state:
+    /// each observation appears in exactly one fold's test set. Because
+    /// [`kfold_indices`] shuffles once into a bijection and assigns position `p` to
+    /// fold `p % k`, every observation lands in one test fold; the `seen` tally
+    /// checks that structural invariant directly. `N = 4`, `k = 2` keeps the
+    /// composed shuffle-and-deal loop within the unwind budget.
+    #[kani::proof]
+    #[kani::unwind(8)]
+    fn resampling_kfold_test_sets_partition() {
+        const N: usize = 4;
+        let state: u64 = kani::any();
+        let mut rng = SplitMix64::new(state);
+        let folds = kfold_indices(N, 2, &mut rng);
+        let mut seen = [0u8; N];
+        for (_, test) in &folds {
+            for &obs in test {
+                assert!(obs < N, "k-fold test index {obs} escaped 0..N");
+                seen[obs] += 1;
+            }
+        }
+        assert!(
+            seen.iter().all(|&c| c == 1),
+            "each observation must appear in exactly one test fold"
+        );
+    }
+
+    /// Proves the `k == 0` input-validation path: [`kfold_indices`] returns an
+    /// empty split for *any* symbolic `n` without drawing from the generator or
+    /// panicking — the guard fires before the shuffle.
+    #[kani::proof]
+    fn resampling_kfold_zero_k_is_empty() {
+        let n: usize = kani::any();
+        let state: u64 = kani::any();
+        let mut rng = SplitMix64::new(state);
+        let folds = kfold_indices(n, 0, &mut rng);
+        assert!(folds.is_empty(), "k == 0 must yield no folds");
+    }
+
+    /// Proves every index [`bootstrap_indices`] draws is in bounds for `0..N`, for
+    /// *every* generator state: each of the `B` resamples holds exactly `N`
+    /// with-replacement indices, all `< N`. This is the crown index-safety property
+    /// at the scheme level — a bootstrap resample can never index past its data.
+    /// `N = 3`, `B = 2` bounds the six symbolic draws.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn resampling_bootstrap_indices_in_bounds() {
+        const N: usize = 3;
+        const B: usize = 2;
+        let state: u64 = kani::any();
+        let mut rng = SplitMix64::new(state);
+        let draws = bootstrap_indices(N, B, &mut rng);
+        assert!(draws.len() == B, "expected B resamples");
+        for resample in &draws {
+            assert!(resample.len() == N, "each resample must hold N indices");
+            for &i in resample {
+                assert!(i < N, "bootstrap index {i} escaped 0..N");
+            }
+        }
+    }
+}

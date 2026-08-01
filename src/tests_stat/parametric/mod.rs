@@ -1,50 +1,48 @@
 //! Parametric hypothesis tests (t-tests, ANOVA, variance tests).
 //!
 //! Houses the four t-tests (one-sample, independent pooled, paired, Welch),
-//! one-way ANOVA, and the Levene/Bartlett variance tests. The t and F p-values
-//! route through the framework null distributions
+//! one-way ANOVA, two-way (factorial) ANOVA, and the Levene/Bartlett variance
+//! tests. The t and F p-values route through the framework null distributions
 //! ([`crate::distributions::TDistribution`], [`crate::distributions::FDistribution`]).
 
 pub mod anova;
 pub mod t_test;
+pub mod two_way_anova;
 pub mod variance_tests;
 
 pub use anova::one_way_anova;
 pub use t_test::{t_test_1samp, t_test_ind, t_test_paired, t_test_welch};
+pub use two_way_anova::{TwoWayAnovaResult, two_way_anova};
 pub use variance_tests::{bartlett, levene};
 
+use crate::distributions::FDistribution;
+use crate::distributions::TDistribution;
 use crate::distributions::{Cdf, LogCdf};
-use crate::distributions::{FDistribution, TDistribution};
 use crate::tests_stat::Alternative;
 
 /// Sample mean of `xs`, or `0.0` for an empty slice (callers validate emptiness).
+///
+/// Thin alias over the shared [`crate::numeric::mean`], kept under this module's
+/// established name for its many parametric-test callers.
 pub(crate) fn mean(xs: &[f64]) -> f64 {
-    if xs.is_empty() {
-        return 0.0;
-    }
-    xs.iter().sum::<f64>() / len_f64(xs.len())
+    crate::numeric::mean(xs)
 }
 
 /// Unbiased (Bessel-corrected, `n−1`) sample variance of `xs`.
 ///
 /// Returns `0.0` for fewer than two observations; callers that require positive
-/// variance check the result and raise a typed error.
+/// variance check the result and raise a typed error. Thin alias over the shared
+/// [`crate::numeric::sample_variance`].
 pub(crate) fn variance(xs: &[f64]) -> f64 {
-    let n = xs.len();
-    if n < 2 {
-        return 0.0;
-    }
-    let m = mean(xs);
-    let ss: f64 = xs.iter().map(|&x| (x - m) * (x - m)).sum();
-    ss / len_f64(n - 1)
+    crate::numeric::sample_variance(xs)
 }
 
 /// Widens a length to `f64` without an `as` cast (lengths are far below `2^53`).
+///
+/// Thin alias over the shared [`crate::numeric::count_to_f64`], kept under this
+/// module's established `len_f64` name for its many callers.
 pub(crate) fn len_f64(n: usize) -> f64 {
-    let wide = u64::try_from(n).unwrap_or(u64::MAX);
-    let hi = u32::try_from(wide >> 32).unwrap_or(0);
-    let lo = u32::try_from(wide & 0xFFFF_FFFF).unwrap_or(0);
-    f64::from(hi).mul_add(4_294_967_296.0, f64::from(lo))
+    crate::numeric::count_to_f64(n)
 }
 
 /// Floors a non-negative `f64` to an `i64` without an `as` cast.

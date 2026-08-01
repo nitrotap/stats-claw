@@ -113,3 +113,78 @@ impl Default for RunningMoments {
         Self::new()
     }
 }
+
+/// Kani formal-verification harnesses for Welford's accumulator.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`); invisible to normal
+/// build/test/clippy. They fold a bounded number of *symbolic finite* updates and
+/// prove the invariants hold for every such stream, not the sampled fixtures a
+/// `#[cfg(test)]` suite would use.
+#[cfg(kani)]
+mod verification {
+    use super::RunningMoments;
+
+    /// Upper bound on `|x|` for the variance proof.
+    ///
+    /// A fully symbolic *finite* `f64` (up to `f64::MAX ≈ 1.8e308`) breaks the
+    /// non-negativity property: `x·x` and the running sums overflow to `±∞`, and
+    /// `∞ − ∞` yields `NaN`, so `variance()` can be `NaN` for extreme-magnitude
+    /// inputs — a genuine limitation, not a spurious solver artifact. Bounding
+    /// `|x| ≤ 1e150` keeps every intermediate (`x·x ≤ 1e300`, and the few-term
+    /// sums) comfortably below `f64::MAX`, isolating the pure sign argument.
+    const MAX_ABS: f64 = 1e150;
+
+    /// Draws a symbolic `f64` constrained to be finite and bounded by [`MAX_ABS`].
+    ///
+    /// Welford's monotone-`M2` argument holds only where the arithmetic stays
+    /// finite; the module contract already documents that non-finite inputs
+    /// propagate into the statistics unchanged, so the proofs scope to the
+    /// non-overflowing finite regime.
+    ///
+    /// # Returns
+    ///
+    /// A finite `f64` with `|x| ≤ MAX_ABS`.
+    fn any_bounded() -> f64 {
+        let x: f64 = kani::any();
+        kani::assume(x.is_finite());
+        kani::assume(x.abs() <= MAX_ABS);
+        x
+    }
+
+    /// Proves that after any three symbolic magnitude-bounded (`|x| ≤ MAX_ABS`)
+    /// updates the accumulator neither panics nor overflows and reports a
+    /// non-negative, non-`NaN` variance. Kani confirms the sign argument survives
+    /// `f64` rounding, not just in exact arithmetic.
+    ///
+    /// The `M2` update adds `delta · delta2`, whose two factors are
+    /// `(x − mean_old)` and `(x − mean_new) = delta · (n−1)/n`; they share a sign,
+    /// so the exact product is `≥ 0` and the fused multiply-add of two non-negative
+    /// reals rounds to a non-negative `f64`. Hence `M2 ≥ 0`, and the Bessel divisor
+    /// `n − 1 > 0` once `count ≥ 2`, so `variance() ≥ 0`. (`assert!(v >= 0.0)` also
+    /// rejects `NaN`, which is never `≥ 0`.) Three updates suffice to exercise the
+    /// `count ≥ 2` variance path; the loop-free unrolling needs no unwind bound.
+    #[kani::proof]
+    fn moments_variance_non_negative() {
+        let mut m = RunningMoments::new();
+        m.update(any_bounded());
+        m.update(any_bounded());
+        m.update(any_bounded());
+        let v = m.variance();
+        assert!(v >= 0.0, "variance was negative or NaN: {v}");
+        assert_eq!(m.count(), 3, "count diverged from the number of updates");
+    }
+
+    /// Proves a single symbolic finite update is panic-/overflow-free and that the
+    /// one-observation variance convention (`0.0`, undefined for `n < 2`) holds
+    /// exactly.
+    #[kani::proof]
+    fn moments_single_update_variance_zero() {
+        let mut m = RunningMoments::new();
+        m.update(any_bounded());
+        let v = m.variance();
+        assert!(
+            v == 0.0,
+            "single-sample variance must be exactly 0.0, was {v}"
+        );
+    }
+}

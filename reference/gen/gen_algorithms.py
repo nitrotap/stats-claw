@@ -7,7 +7,7 @@ generator records the dataset, the ``scikit-learn`` reference labels, and any
 identifiable scalars (k-means inertia, DBSCAN core-sample count, discovered
 cluster count) the Rust suite asserts exactly.
 
-The Wave-2 follow-up (``kjevaji/algorithms-decomp``) extends this module with
+A follow-up wave extends this module with
 decomposition (PCA, factor analysis, ICA), embedding (t-SNE, UMAP, LLE), PELT
 change-point, and GMM fixtures. Stochastic embeddings record the reference
 trustworthiness so the Rust suite compares against a data-derived quality

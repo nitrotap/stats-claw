@@ -164,6 +164,64 @@ fn result(t: f64, df: f64, alternative: Alternative) -> TestResult {
     }
 }
 
+/// Kani formal-verification harnesses for the t-test input-validation layer.
+///
+/// Compiled only under `cargo kani` (behind `#[cfg(kani)]`). Each call supplies a
+/// shape that trips the leading structural guard (too few observations, or a length
+/// mismatch), so the function returns `Err` before reaching the variance / Student-t
+/// interior — the symbolic sample values are never inspected, and the proof stays
+/// clear of the transcendental t-distribution tail (whose value proofs spurious-fail
+/// under CBMC). This proves the validation logic itself is panic-free and rejects
+/// the bad shape for arbitrary values.
+#[cfg(kani)]
+mod verification {
+    use super::{t_test_1samp, t_test_ind, t_test_paired, t_test_welch};
+    use crate::error::Error;
+    use crate::tests_stat::Alternative;
+
+    /// Proves the four t-test entry points reject shape-invalid input via `Err`
+    /// without panicking, for arbitrary symbolic sample values.
+    #[kani::proof]
+    // Live path returns Err before any loop; the unwind bound caps the dead
+    // transcendental-tail branches CBMC unwinds during model construction.
+    #[kani::unwind(2)]
+    fn t_test_validation_rejects_bad_shapes() {
+        let one: [f64; 1] = [kani::any()];
+        assert!(
+            matches!(
+                t_test_1samp(&one, kani::any(), Alternative::TwoSided),
+                Err(Error::InsufficientData)
+            ),
+            "one-sample t-test under two observations must reject"
+        );
+        let a1: [f64; 1] = [kani::any()];
+        let b1: [f64; 1] = [kani::any()];
+        assert!(
+            matches!(
+                t_test_ind(&a1, &b1, Alternative::TwoSided),
+                Err(Error::InsufficientData)
+            ),
+            "independent t-test under two observations must reject"
+        );
+        assert!(
+            matches!(
+                t_test_welch(&a1, &b1, Alternative::TwoSided),
+                Err(Error::InsufficientData)
+            ),
+            "Welch t-test under two observations must reject"
+        );
+        let pa: [f64; 2] = [kani::any(), kani::any()];
+        let pb: [f64; 3] = [kani::any(), kani::any(), kani::any()];
+        assert!(
+            matches!(
+                t_test_paired(&pa, &pb, Alternative::TwoSided),
+                Err(Error::InvalidInput(_))
+            ),
+            "paired t-test with length mismatch must reject"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

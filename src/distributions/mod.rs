@@ -1,12 +1,11 @@
-//! Probability distributions: parameter structs plus their behaviour traits.
+//! Probability distributions as plain parameter structs with behaviour traits.
 //!
 //! This module defines the behaviour traits (`Pdf`/`Pmf`/`Cdf`/`Quantile`/
 //! `Moments`/`Sample`) every distribution implements, plus the shared
 //! `bisection_quantile` inverse-CDF solver and a small integer→float helper.
-//! The plain-data parameter structs for each distribution live in [`types`] and
-//! are re-exported here. Each concrete distribution lives in a subgroup folder
-//! (`symmetric/`, `positive/`, `sampling/`, `discrete/`) and implements these
-//! traits for its parameter struct, keeping the family uniform.
+//! Each concrete distribution lives in a subgroup folder (`symmetric/`,
+//! `positive/`, `sampling/`, `discrete/`) and implements these traits for its
+//! parameter struct, keeping the family uniform.
 //!
 //! The math is validated against committed `scipy.stats` golden fixtures by the
 //! `distributions_equiv` integration suite within the documented tolerances
@@ -19,7 +18,8 @@
 //! `1/√(2π) ≈ 0.398_942` and its CDF is `0.5` at the mean.
 //!
 //! ```
-//! use stats_claw::distributions::{Cdf, Moments, NormalDistribution, Pdf, Quantile};
+//! use stats_claw::distributions::{Cdf, Moments, Pdf, Quantile};
+//! use stats_claw::distributions::NormalDistribution;
 //!
 //! let n = NormalDistribution {
 //!     mean: 0.0,
@@ -36,15 +36,14 @@
 
 use crate::rng::SplitMix64;
 
+pub mod types;
+pub use types::*;
 pub mod discrete;
 pub mod positive;
 pub mod sampling;
 mod simd;
 pub mod symmetric;
-pub mod types;
 mod ziggurat;
-
-pub use types::*;
 
 /// Continuous probability density at a point.
 pub trait Pdf {
@@ -96,7 +95,7 @@ pub trait Cdf {
 /// null distribution — where a statistical test's p-value lives — is exactly
 /// where the linear [`Cdf`] loses all precision (`1 - cdf(x)` rounds to `0.0`
 /// once `cdf(x) ≥ 1 - 2⁻⁵³`); these log-space evaluations stay finite and
-/// accurate there, so a test can report an accurate log p-value.
+/// accurate there, so a test can report an honest log p-value.
 pub trait LogCdf {
     /// Evaluates the natural log of the CDF, `ln P(X ≤ x)`.
     ///
