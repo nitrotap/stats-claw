@@ -3,3 +3,7 @@
 
 # macOS Finder metadata
 .DS_Store
+
+# Python bytecode (reference/gen fixture generators)
+__pycache__/
+*.pyc

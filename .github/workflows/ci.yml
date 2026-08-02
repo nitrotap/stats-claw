@@ -44,6 +44,11 @@ jobs:
         run: cargo clippy --all-targets
       - name: Tests
         run: cargo test
+      - name: Golden-fixture drift gate self-test
+        # Stdlib-only fault injection, no reference stack needed. The drift gate
+        # itself only runs on a schedule, so without this a change that stopped it
+        # catching anything would sit unnoticed until the next cron.
+        run: cd reference && python3 -m unittest gen.test_fixture_diff
 
   docs:
     name: docs (rustdoc, warnings as errors)
@@ -113,9 +118,20 @@ jobs:
         # `ln_gamma`, which CBMC cannot model directly.
         run: cargo kani -Z stubbing
 
+  # Regenerates every fixture into a scratch directory and compares it to the
+  # committed tree *numerically*, not byte-wise. The committed JSON is never
+  # touched, so the test suite keeps asserting against the exact recorded bits;
+  # this job only answers whether the pinned reference stack still produces those
+  # answers on a machine that is not the one that recorded them.
+  #
+  # It used to be `git diff --exit-code`, which demanded that IEEE-754 doubles be
+  # bit-identical across CPUs, thread counts, and BLAS builds — and so failed
+  # every run on 514 lines of last-bit rounding. See reference/gen/fixture_diff.py
+  # for the tolerances and their justification, and docs/fixture-drift.md for the
+  # measurements behind them.
   fixture-drift:
     name: golden-fixture drift
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -125,9 +141,18 @@ jobs:
           python-version: "3.12"
       - name: Install the pinned reference stack
         run: python3 -m pip install -r reference/requirements.txt
-      - name: Regenerate golden fixtures
-        run: cd reference && python3 -m gen.run_all
-      - name: Fail if any golden fixture drifted
+      - name: Record the resolved reference stack
+        run: python3 -m pip freeze
+      - name: Prove the drift gate still catches a real change
+        run: cd reference && python3 -m unittest gen.test_fixture_diff
+      - name: Regenerate into a scratch directory
+        run: |
+          rm -rf "$RUNNER_TEMP/fixture-drift" && mkdir -p "$RUNNER_TEMP/fixture-drift"
+          cd reference && FIXTURE_GOLDEN_DIR="$RUNNER_TEMP/fixture-drift" python3 -m gen.run_all
+      - name: Compare numerically
+        run: cd reference && python3 -m gen.fixture_diff golden "$RUNNER_TEMP/fixture-drift"
+      - name: Fail if the committed fixtures were edited
+        # The regeneration writes outside the tree; nothing tracked may have moved.
         run: git diff --exit-code -- reference/golden
 
   publish:
