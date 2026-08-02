@@ -68,6 +68,26 @@ manual dispatch, and on every `v*` release tag, where the `publish` job waits on
 it. It is deliberately not on every push — model checking takes tens of minutes
 where the other gates take seconds.
 
+### Targets the suite is discharged on
+
+A proof is a claim about this crate's code, not about a machine. *Discharging*
+one is not platform-neutral: a harness links the host's `std`, and CBMC
+model-checks whatever that `std` does, so a harness can terminate on one target
+and not on another without anything about the crate changing. Which targets the
+suite is actually discharged on therefore belongs in this file, and is recorded
+here rather than assumed.
+
+| Target | Result | `cargo kani -Z stubbing` |
+|---|---|---|
+| `x86_64-unknown-linux-gnu` (GitHub Actions `ubuntu-latest`) | 68 verified, 0 failures | 9m03s |
+| `aarch64-apple-darwin` | 68 verified, 0 failures | 6m28s |
+
+`x86_64-unknown-linux-gnu` is the CI target, so every scheduled run, manual
+dispatch, and `v*` tag re-establishes that row. Both targets discharge the same
+68 harnesses with the same results: there is no platform-conditional harness, no
+target-specific stub, and no bound that is loosened on one and not the other.
+The timings are whole-command wall clock, compilation included.
+
 ## What is proven
 
 68 harnesses across 43 modules. Grouped by the layer they cover:
@@ -116,7 +136,11 @@ in each; collection sizes are bounded as noted:
 - Jackknife and leave-one-out folds partition correctly, with fold *i* omitting
   exactly observation *i* (`n = 3`).
 - Sizes too small to be meaningful are rejected with `InsufficientData` /
-  `InvalidInput` for symbolic `n` and `k`, rather than proceeding.
+  `InvalidInput` rather than proceeding. The leave-one-out and jackknife guards
+  take a symbolic `n` under `assume(n < 2)`; the stratified `k < 2` guard
+  enumerates `k` over `{0, 1}` instead, which is the complete set that
+  `k: usize` with `k < 2` denotes, so it covers the same domain — see the note on
+  `kani::assume` under *What is not proven* for why it is written that way.
 - The Phipson–Smyth corrected Monte-Carlo p-value stays in `(0, 1]` for symbolic
   finite null draws.
 
@@ -156,6 +180,24 @@ treating the list above as broader than it is.
 - **Rank helpers and hash-map paths** (`mid_ranks`, `tie_correction`, the
   clustering relabel) loop off `Vec`-derived lengths or `HashMap` iteration and
   are likewise unit-test covered.
+- **A `kani::assume` does not stop CBMC from executing the excluded path.**
+  Symbolic execution walks both sides of a branch it cannot fold at symex time;
+  the assumption prunes the impossible side later, at the solver. A harness must
+  therefore keep its *unreachable* branches tractable too, not only the reachable
+  ones — and what counts as tractable depends on the host `std`. Concretely: a
+  branch that constructs a `HashMap` seeds a `RandomState` from OS entropy, which
+  on Linux is `std::sys::random::linux::getrandom`, a retry loop whose trip count
+  depends on a foreign call CBMC cannot model and so unwinds without bound. This
+  is why `resampling_stratified_rejects_small_k` enumerates `k` over `{0, 1}` as
+  a const parameter rather than drawing it with `kani::any()` under
+  `assume(k < 2)`: `{0, 1}` is the complete domain of `k: usize` with `k < 2`, so
+  the guard folds at symex time and the `k >= 2` branch of
+  `stratified_kfold_indices` — the one holding the `HashMap` — is never executed.
+  **The property proved is the same either way**: the same rejection, over the
+  same set of `k`, with the generator state fully symbolic across all 2^64
+  values. The sibling `resampling_loo_rejects_small_n` and
+  `resampling_jackknife_rejects_small_n` keep the symbolic-plus-`assume` form,
+  which is sound for them because their guarded branches reach no `HashMap`.
 - **Unbounded rejection loops** (the ziggurat tail) are verified per iteration,
   not as a whole loop.
 - **Collection sizes are bounded**, as listed per property above. CBMC is a

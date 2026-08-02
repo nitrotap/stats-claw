@@ -5,6 +5,34 @@ All notable changes to this crate are documented here. The format is based on
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Pre-`1.0`, minor versions may
 contain breaking changes.
 
+## [0.2.1] — 2026-08-02
+
+A release-engineering fix. The library's public API, numerics, and behaviour are identical
+to 0.2.0; what changed is that the proof suite now terminates on the CI target, so the
+release gates can actually be discharged there. Still zero runtime dependencies
+(std-only), still MSRV 1.93.
+
+### Fixed
+- **The `resampling_stratified_rejects_small_k` proof harness no longer runs forever on
+  `x86_64-unknown-linux-gnu`.** It drew `k` with `kani::any()` under `assume(k < 2)`, but
+  CBMC's symbolic execution walks both sides of a branch it cannot fold at symex time, and
+  a `kani::assume` prunes the impossible side only later, at the solver — so the `k >= 2`
+  branch was executed in full. That branch builds the per-class `HashMap`, whose
+  `RandomState` seeds itself from OS entropy; on Linux that is a retry-until-filled
+  `getrandom` loop whose trip count depends on a foreign call CBMC cannot model, so CBMC
+  unwound it without bound. macOS reaches entropy through a single non-looping call, which
+  is why the same suite finished in ~8 minutes on aarch64 and reported 68/68 while the
+  0.2.0 release job burned 85 minutes on this one harness, hit its 90-minute timeout with
+  only 42 of the 68 harnesses run, and skipped `publish`. `k` is now enumerated concretely
+  over `{0, 1}` — exactly the set `k: usize, k < 2` denotes, a complete enumeration rather
+  than a weakening — with the generator state still fully symbolic. The guard folds at
+  symex time, so neither the dead branch nor the `HashMap` behind it is ever explored.
+
+### Changed
+- `VERIFICATION.md` records which targets the suite is discharged on
+  (`x86_64-unknown-linux-gnu` and `aarch64-apple-darwin`, 68 verified / 0 failures on
+  each) and why discharging a proof is not platform-neutral.
+
 ## [0.2.0] — 2026-07-31
 
 Adds a formal-verification layer and several new public modules. Still zero runtime

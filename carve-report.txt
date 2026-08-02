@@ -8,6 +8,11 @@ selected entities:    112 (family-eligible)
 types emitted:        26 (referenced by shipped code)
 skip regions removed: 5
 doc-hygiene flags:    0
+formatting:           rustfmt --edition 2024, on every emitted file except 4 `include!` target(s)
+  copied verbatim:    src/algorithms/feature_selection/verification.rs (rustfmt never visits it)
+  copied verbatim:    src/distributions/ziggurat_tables.rs (rustfmt never visits it)
+  copied verbatim:    src/distributions/ziggurat_verification.rs (rustfmt never visits it)
+  copied verbatim:    src/tests_stat/parametric/two_way_anova_verification.rs (rustfmt never visits it)
 preserved (never written): README.md, CHANGELOG.md, RELEASING.md, VERIFICATION.md, Cargo.toml, Cargo.lock, LICENSE-MIT, LICENSE-APACHE, assets, tests, reference, benches, docs
 
 emitted types by destination module:
